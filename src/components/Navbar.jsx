@@ -13,11 +13,9 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  const navItems = [
-    { path: '/', label: 'Home', icon: HomeIcon },
-    { path: '/dashboard', label: 'Checklists', icon: ListIcon },
-    ...(isAdmin ? [{ path: '/admin', label: 'Admin', icon: ShieldIcon }] : []),
-  ];
+  const navItems = isAdmin 
+    ? [{ path: '/admin', label: 'Admin', icon: ShieldIcon }]
+    : [];
 
   return (
     <>
@@ -25,9 +23,6 @@ const Navbar = () => {
       <header className="app-header">
         <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-gradient-orange rounded-xl flex items-center justify-center shadow-md">
-              <span className="text-white font-bold text-sm font-heading">RE</span>
-            </div>
             <div>
               <p className="text-xs text-gray-500 leading-none">Nyati Builders</p>
               <p className="text-sm font-bold text-brand-blue leading-tight font-heading">Quality App</p>
@@ -66,20 +61,24 @@ const Navbar = () => {
                 <p className="text-blue-200 text-xs truncate">{user?.email}</p>
               </div>
               <div className="p-2">
-                <Link
-                  to="/"
-                  onClick={() => setShowMenu(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm text-gray-700 font-medium transition-colors"
-                >
-                  <HomeIcon className="w-4 h-4 text-brand-orange" /> Home
-                </Link>
-                <Link
-                  to="/dashboard"
-                  onClick={() => setShowMenu(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm text-gray-700 font-medium transition-colors"
-                >
-                  <ListIcon className="w-4 h-4 text-brand-orange" /> Checklists
-                </Link>
+                {!isAdmin && (
+                  <>
+                    <Link
+                      to="/"
+                      onClick={() => setShowMenu(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm text-gray-700 font-medium transition-colors"
+                    >
+                      <HomeIcon className="w-4 h-4 text-brand-orange" /> Home
+                    </Link>
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setShowMenu(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm text-gray-700 font-medium transition-colors"
+                    >
+                      <ListIcon className="w-4 h-4 text-brand-orange" /> Checklists
+                    </Link>
+                  </>
+                )}
                 {isAdmin && (
                   <Link
                     to="/admin"
@@ -104,30 +103,32 @@ const Navbar = () => {
       </header>
 
       {/* Bottom Navigation */}
-      <nav className="bottom-nav">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all duration-200 ${
-                isActive
-                  ? 'text-brand-orange'
-                  : 'text-gray-400 hover:text-gray-600'
-              }`}
-              id={`nav-${item.label.toLowerCase()}`}
-            >
-              <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
-              <span className="text-[10px] font-semibold">{item.label}</span>
-              {isActive && (
-                <span className="absolute bottom-0 w-1 h-1 bg-brand-orange rounded-full" />
-              )}
-            </Link>
-          );
-        })}
-      </nav>
+      {navItems.length > 0 && (
+        <nav className="bottom-nav">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all duration-200 ${
+                  isActive
+                    ? 'text-brand-orange'
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+                id={`nav-${item.label.toLowerCase()}`}
+              >
+                <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
+                <span className="text-[10px] font-semibold">{item.label}</span>
+                {isActive && (
+                  <span className="absolute bottom-0 w-1 h-1 bg-brand-orange rounded-full" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </>
   );
 };
