@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getChecklists } from '../api/checklists';
+import { getCategories } from '../api/categories';
 import Navbar from '../components/Navbar';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -9,13 +10,13 @@ import Badge from '../components/ui/Badge';
 import { CardSkeleton } from '../components/ui/Skeleton';
 
 const STAGE_OPTIONS = ['Pre Work', 'Pour Card', 'During Work', 'After Work', 'General'];
-const CATEGORY_OPTIONS = ['RCC', 'Paint NOC', 'RCC + Finishes', 'Checklist A', 'Development', 'General'];
 
 const Home = () => {
   const { user, isAdmin } = useAuth();
   const [checklists, setChecklists] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('RCC');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [auditForm, setAuditForm] = useState({
     siteName: '',
     auditorName: '',
@@ -42,6 +43,7 @@ const Home = () => {
       navigate('/admin');
     }
     fetchChecklists();
+    fetchCategories();
   }, [user]);
 
   const fetchChecklists = async () => {
@@ -52,6 +54,19 @@ const Home = () => {
       console.error('Failed to fetch checklists:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await getCategories();
+      const cats = res.data.data;
+      setCategories(cats);
+      if (cats.length > 0) {
+        setSelectedCategory(cats[0].name);
+      }
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
     }
   };
 
@@ -155,25 +170,25 @@ const Home = () => {
             <div className="border-b border-gray-200 p-3">
               <p className="text-xs font-semibold text-brand-orange mb-2">Stage of Audit</p>
               <div className="grid grid-cols-2 gap-2">
-                {['RCC', 'Paint NOC', 'RCC + Finishes', 'Checklist A', 'Development'].map((cat) => (
+                {categories.map((cat) => (
                   <label
-                    key={cat}
+                    key={cat._id}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all duration-150
-                      ${selectedCategory === cat
+                      ${selectedCategory === cat.name
                         ? 'border-brand-orange bg-orange-50 text-brand-orange'
                         : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-orange-300'
                       }`}
-                    onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+                    onClick={() => setSelectedCategory(selectedCategory === cat.name ? null : cat.name)}
                   >
                     <div className={`w-4 h-4 border-2 rounded flex items-center justify-center flex-shrink-0 transition-all
-                      ${selectedCategory === cat ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
-                      {selectedCategory === cat && (
+                      ${selectedCategory === cat.name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
+                      {selectedCategory === cat.name && (
                         <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                       )}
                     </div>
-                    <span className="text-xs font-semibold">{cat}</span>
+                    <span className="text-xs font-semibold">{cat.name}</span>
                   </label>
                 ))}
               </div>

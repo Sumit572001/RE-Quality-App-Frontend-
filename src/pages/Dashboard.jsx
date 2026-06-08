@@ -180,6 +180,11 @@ const ChecklistCard = ({ checklist, isExpanded, onToggle }) => {
               </div>
               <span className={`text-sm flex-1 transition-all ${checkedItems[idx] ? 'line-through text-gray-400' : 'text-gray-700'}`}>
                 {item.label}
+                {item.mark !== undefined && item.mark !== null && (
+                  <span className="ml-2 text-xs font-semibold text-brand-orange bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100">
+                    Mark: {item.mark}
+                  </span>
+                )}
               </span>
               {item.required && (
                 <span className="badge-red text-xs flex-shrink-0">Required</span>

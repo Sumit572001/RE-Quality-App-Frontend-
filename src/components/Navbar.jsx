@@ -13,7 +13,7 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  const navItems = isAdmin 
+  const navItems = isAdmin
     ? [{ path: '/admin', label: 'Admin', icon: ShieldIcon }]
     : [];
 
@@ -112,11 +112,10 @@ const Navbar = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all duration-200 ${
-                  isActive
-                    ? 'text-brand-orange'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
+                className={`flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all duration-200 ${isActive
+                  ? 'text-brand-orange'
+                  : 'text-gray-400 hover:text-gray-600'
+                  }`}
                 id={`nav-${item.label.toLowerCase()}`}
               >
                 <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
