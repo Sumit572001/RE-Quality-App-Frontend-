@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   getChecklists, createChecklist, updateChecklist, deleteChecklist
 } from '../api/checklists';
 import {
@@ -362,7 +362,7 @@ const AdminPanel = () => {
           </div>
           <h1 className="text-white font-black text-lg tracking-tighter">NYATI ADMIN</h1>
         </div>
-        <button 
+        <button
           onClick={handleLogout}
           className="bg-[#FF4D4D] text-white text-[10px] font-bold px-4 py-1.5 rounded uppercase hover:bg-red-600 transition-colors"
         >
@@ -377,11 +377,10 @@ const AdminPanel = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-4 text-[10px] font-bold transition-all border-b-4 ${
-                activeTab === tab.id 
-                ? 'border-[#004282] text-[#004282]' 
+              className={`flex items-center gap-2 px-6 py-4 text-[10px] font-bold transition-all border-b-4 ${activeTab === tab.id
+                ? 'border-[#004282] text-[#004282]'
                 : 'border-transparent text-gray-400 hover:text-gray-600'
-              }`}
+                }`}
             >
               <span className="text-sm opacity-70">{tab.icon}</span>
               {tab.label}
@@ -392,7 +391,7 @@ const AdminPanel = () => {
 
       {/* 3. MAIN CONTENT */}
       <main className="max-w-3xl mx-auto px-5 py-8 animate-fade-in">
-        
+
         {/* TAB: CHECKLIST */}
         {activeTab === 'checklist' && (
           <div className="space-y-8">
@@ -402,11 +401,11 @@ const AdminPanel = () => {
                 <div className="w-1.5 h-5 bg-[#E8690A] rounded-full" />
                 <h2 className="text-[#004282] font-black text-sm uppercase tracking-tight">ADD NEW CHECKLIST</h2>
               </div>
-              
+
               <form onSubmit={handleAddChecklistPoint} className="space-y-5">
                 <div>
                   <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2 px-1">SELECT CATEGORY</label>
-                  <select 
+                  <select
                     value={checklistForm.category}
                     onChange={(e) => handleCategoryChange(e.target.value)}
                     className="w-full bg-[#f8fafc] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -420,7 +419,7 @@ const AdminPanel = () => {
 
                 <div>
                   <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2 px-1">SELECT SUB-CATEGORY</label>
-                  <select 
+                  <select
                     value={checklistForm.subCategory}
                     onChange={(e) => setChecklistForm({ ...checklistForm, subCategory: e.target.value })}
                     className="w-full bg-[#f8fafc] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -434,27 +433,27 @@ const AdminPanel = () => {
 
                 <div>
                   <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2 px-1">INSPECTION QUESTION</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={checklistForm.question}
                     onChange={(e) => setChecklistForm({ ...checklistForm, question: e.target.value })}
-                    placeholder="Check Plumb / Reinforcement..." 
+                    placeholder="Check Plumb / Reinforcement..."
                     className="w-full bg-[#f8fafc] border border-gray-200 rounded-xl px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 placeholder:italic"
                   />
                 </div>
 
                 <div>
                   <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2 px-1">MARK</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={checklistForm.mark}
                     onChange={(e) => setChecklistForm({ ...checklistForm, mark: e.target.value })}
-                    placeholder="Enter mark (e.g. 5)..." 
+                    placeholder="Enter mark (e.g. 5)..."
                     className="w-full bg-[#f8fafc] border border-gray-200 rounded-xl px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 placeholder:italic"
                   />
                 </div>
 
-                <button 
+                <button
                   type="submit"
                   disabled={loading}
                   className="w-full bg-[#004282] text-white font-black text-xs py-4 rounded-xl shadow-md hover:bg-blue-900 transition-all uppercase tracking-widest mt-2 active:scale-95 disabled:opacity-50"
@@ -481,7 +480,7 @@ const AdminPanel = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <label className="text-[9px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Category</label>
-                            <select 
+                            <select
                               value={editChecklistCategory}
                               onChange={(e) => handleEditChecklistCategoryChange(e.target.value)}
                               className="w-full bg-[#f8fafc] border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-100"
@@ -493,7 +492,7 @@ const AdminPanel = () => {
                           </div>
                           <div>
                             <label className="text-[9px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Sub-Category</label>
-                            <select 
+                            <select
                               value={editChecklistSubCategory}
                               onChange={(e) => setEditChecklistSubCategory(e.target.value)}
                               className="w-full bg-[#f8fafc] border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-100"
@@ -508,19 +507,19 @@ const AdminPanel = () => {
                         <div className="flex flex-col sm:flex-row gap-3">
                           <div className="flex-1">
                             <label className="text-[9px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Inspection Question</label>
-                            <input 
-                              type="text" 
-                              value={editChecklistQuestion} 
-                              onChange={(e) => setEditChecklistQuestion(e.target.value)} 
+                            <input
+                              type="text"
+                              value={editChecklistQuestion}
+                              onChange={(e) => setEditChecklistQuestion(e.target.value)}
                               className="w-full bg-[#f8fafc] border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-100"
                             />
                           </div>
                           <div className="w-full sm:w-20">
                             <label className="text-[9px] font-black text-gray-400 uppercase tracking-tighter block mb-1">Mark</label>
-                            <input 
-                              type="number" 
-                              value={editChecklistMark} 
-                              onChange={(e) => setEditChecklistMark(e.target.value)} 
+                            <input
+                              type="number"
+                              value={editChecklistMark}
+                              onChange={(e) => setEditChecklistMark(e.target.value)}
                               className="w-full bg-[#f8fafc] border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-100"
                             />
                           </div>
@@ -547,13 +546,13 @@ const AdminPanel = () => {
                           <p className="text-gray-700 text-sm font-medium leading-tight">{c.title}</p>
                         </div>
                         <div className="flex items-center gap-1">
-                          <button 
+                          <button
                             onClick={() => startEditChecklist(c)}
                             className="text-blue-500 hover:text-blue-700 text-[10px] font-black px-3 py-1.5 uppercase transition-all"
                           >
                             Edit
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDeleteChecklist(c._id)}
                             className="text-red-300 hover:text-red-500 transition-colors p-2"
                           >
@@ -574,21 +573,21 @@ const AdminPanel = () => {
         {/* TAB: CATEGORY */}
         {activeTab === 'category' && (
           <div className="space-y-8 animate-fade-in">
-             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-6">
                 <div className="w-1.5 h-5 bg-[#E8690A] rounded-full" />
                 <h2 className="text-[#004282] font-black text-sm uppercase tracking-tight">ADD NEW CATEGORY</h2>
               </div>
               <form onSubmit={handleAddCategory} className="space-y-4">
                 <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2 px-1">CATEGORY NAME</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
-                  placeholder="Enter category name..." 
+                  placeholder="Enter category name..."
                   className="w-full bg-[#f8fafc] border border-gray-200 rounded-xl px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 placeholder:italic"
                 />
-                <button 
+                <button
                   type="submit"
                   disabled={loading}
                   className="w-full bg-[#004282] text-white font-black text-xs py-4 rounded-xl shadow-md uppercase tracking-widest mt-2 disabled:opacity-50"
@@ -597,7 +596,7 @@ const AdminPanel = () => {
                 </button>
               </form>
             </section>
-            
+
             <section className="bg-white rounded-2xl p-0 shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 flex items-center justify-between border-b">
                 <h2 className="text-[#004282] font-bold text-sm uppercase">CURRENT CATEGORIES</h2>
@@ -607,13 +606,13 @@ const AdminPanel = () => {
               </div>
               <div className="p-4 space-y-2 max-h-[400px] overflow-y-auto bg-[#F8FAFC]">
                 {categories.map((cat) => (
-                   <div key={cat._id} className="bg-white border border-gray-100 p-5 rounded-xl flex items-center justify-between group shadow-sm">
+                  <div key={cat._id} className="bg-white border border-gray-100 p-5 rounded-xl flex items-center justify-between group shadow-sm">
                     {editingCategoryId === cat._id ? (
                       <div className="flex-1 flex gap-2">
-                        <input 
-                          type="text" 
-                          value={editCategoryName} 
-                          onChange={(e) => setEditCategoryName(e.target.value)} 
+                        <input
+                          type="text"
+                          value={editCategoryName}
+                          onChange={(e) => setEditCategoryName(e.target.value)}
                           className="bg-[#f8fafc] border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none flex-1"
                         />
                         <button onClick={() => handleSaveCategory(cat._id)} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
@@ -623,13 +622,13 @@ const AdminPanel = () => {
                       <>
                         <span className="text-gray-800 font-bold text-sm">{cat.name}</span>
                         <div className="flex items-center gap-1">
-                          <button 
+                          <button
                             onClick={() => startEditCategory(cat)}
                             className="text-blue-500 hover:text-blue-700 text-[10px] font-black px-3 py-1.5 uppercase transition-all"
                           >
                             Edit
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDeleteCategory(cat._id)}
                             className="text-red-300 hover:text-red-500 transition-colors p-2"
                           >
@@ -640,7 +639,7 @@ const AdminPanel = () => {
                         </div>
                       </>
                     )}
-                   </div>
+                  </div>
                 ))}
               </div>
             </section>
@@ -650,7 +649,7 @@ const AdminPanel = () => {
         {/* TAB: SUB-CATEGORY */}
         {activeTab === 'subcategory' && (
           <div className="space-y-8 animate-fade-in">
-             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-6">
                 <div className="w-1.5 h-5 bg-[#E8690A] rounded-full" />
                 <h2 className="text-[#004282] font-black text-sm uppercase tracking-tight">ADD NEW SUB-CATEGORY</h2>
@@ -658,7 +657,7 @@ const AdminPanel = () => {
               <form onSubmit={handleAddSubCategory} className="space-y-5">
                 <div>
                   <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2 px-1">SELECT PARENT CATEGORY</label>
-                  <select 
+                  <select
                     value={subcategoryForm.category}
                     onChange={(e) => setSubcategoryForm({ ...subcategoryForm, category: e.target.value })}
                     className="w-full bg-[#f8fafc] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -672,16 +671,16 @@ const AdminPanel = () => {
 
                 <div>
                   <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2 px-1">SUB-CATEGORY NAME</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={subcategoryForm.name}
                     onChange={(e) => setSubcategoryForm({ ...subcategoryForm, name: e.target.value })}
-                    placeholder="Enter sub-category name..." 
+                    placeholder="Enter sub-category name..."
                     className="w-full bg-[#f8fafc] border border-gray-200 rounded-xl px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 placeholder:italic"
                   />
                 </div>
 
-                <button 
+                <button
                   type="submit"
                   disabled={loading}
                   className="w-full bg-[#004282] text-white font-black text-xs py-4 rounded-xl shadow-md uppercase tracking-widest mt-2 disabled:opacity-50"
@@ -690,7 +689,7 @@ const AdminPanel = () => {
                 </button>
               </form>
             </section>
-            
+
             <section className="bg-white rounded-2xl p-0 shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 flex items-center justify-between border-b">
                 <h2 className="text-[#004282] font-bold text-sm uppercase">CURRENT SUB-CATEGORIES</h2>
@@ -700,10 +699,10 @@ const AdminPanel = () => {
               </div>
               <div className="p-4 space-y-2 max-h-[400px] overflow-y-auto bg-[#F8FAFC]">
                 {subCategories.map((sub) => (
-                   <div key={sub._id} className="bg-white border border-gray-100 p-5 rounded-xl flex items-center justify-between group shadow-sm">
+                  <div key={sub._id} className="bg-white border border-gray-100 p-5 rounded-xl flex items-center justify-between group shadow-sm">
                     {editingSubCategoryId === sub._id ? (
                       <div className="flex-1 flex flex-col sm:flex-row gap-2">
-                        <select 
+                        <select
                           value={editSubCategoryParent}
                           onChange={(e) => setEditSubCategoryParent(e.target.value)}
                           className="bg-[#f8fafc] border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none"
@@ -713,10 +712,10 @@ const AdminPanel = () => {
                             <option key={c._id} value={c._id}>{c.name}</option>
                           ))}
                         </select>
-                        <input 
-                          type="text" 
-                          value={editSubCategoryName} 
-                          onChange={(e) => setEditSubCategoryName(e.target.value)} 
+                        <input
+                          type="text"
+                          value={editSubCategoryName}
+                          onChange={(e) => setEditSubCategoryName(e.target.value)}
                           className="bg-[#f8fafc] border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none flex-1"
                         />
                         <div className="flex gap-1">
@@ -733,13 +732,13 @@ const AdminPanel = () => {
                           </p>
                         </div>
                         <div className="flex items-center gap-1">
-                          <button 
+                          <button
                             onClick={() => startEditSubCategory(sub)}
                             className="text-blue-500 hover:text-blue-700 text-[10px] font-black px-3 py-1.5 uppercase transition-all"
                           >
                             Edit
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDeleteSubCategory(sub._id)}
                             className="text-red-300 hover:text-red-500 transition-colors p-2"
                           >
@@ -750,7 +749,7 @@ const AdminPanel = () => {
                         </div>
                       </>
                     )}
-                   </div>
+                  </div>
                 ))}
               </div>
             </section>
