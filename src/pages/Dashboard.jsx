@@ -11,7 +11,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [checklists, setChecklists] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState('');
+  const [activeSubCategory, setActiveSubCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState(null);
 
@@ -20,11 +21,15 @@ const Dashboard = () => {
       navigate('/admin');
     }
 
-    // Read category from URL params if available
+    // Read category and subCategory from URL params if available
     const searchParams = new URLSearchParams(window.location.search);
     const categoryParam = searchParams.get('category');
+    const subCategoryParam = searchParams.get('subCategory');
     if (categoryParam) {
       setActiveCategory(categoryParam);
+    }
+    if (subCategoryParam) {
+      setActiveSubCategory(subCategoryParam);
     }
 
     fetchChecklists();
@@ -43,12 +48,13 @@ const Dashboard = () => {
   };
 
   const filtered = checklists.filter((c) => {
-    const matchCat = activeCategory === 'All' || c.category === activeCategory;
+    const matchCat = !activeCategory || c.category === activeCategory;
+    const matchSub = !activeSubCategory || c.subCategory === activeSubCategory;
     const matchSearch =
       !searchQuery ||
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchSearch;
+    return matchCat && matchSub && matchSearch;
   });
 
   return (
@@ -57,7 +63,7 @@ const Dashboard = () => {
         {/* Header */}
         <div className="mb-6 flex items-center gap-3">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/select-subcategory')}
             className="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center shadow-sm text-brand-blue hover:bg-gray-50 transition-colors"
             title="Go Back"
           >
@@ -67,7 +73,7 @@ const Dashboard = () => {
           </button>
           <div>
             <h1 className="text-2xl font-heading font-bold text-brand-blue">Audit Checkpoints</h1>
-            <p className="text-sm text-gray-500">Executing Audit for: <span className="font-bold text-brand-orange">{activeCategory}</span></p>
+            <p className="text-sm text-gray-500">Executing Audit for: <span className="font-bold text-brand-orange">{activeCategory} - {activeSubCategory}</span></p>
           </div>
         </div>
 
@@ -82,7 +88,7 @@ const Dashboard = () => {
             <p className="text-5xl mb-3">📋</p>
             <p className="font-semibold text-gray-600 mb-1">No checklists found</p>
             <p className="text-sm text-gray-400">
-              {searchQuery ? 'Try a different search term' : `No checklists in ${activeCategory} category`}
+              {searchQuery ? 'Try a different search term' : `No checklists in ${activeCategory} - ${activeSubCategory}`}
             </p>
           </div>
         ) : (

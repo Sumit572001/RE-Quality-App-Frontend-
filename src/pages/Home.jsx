@@ -11,12 +11,49 @@ import { CardSkeleton } from '../components/ui/Skeleton';
 
 const STAGE_OPTIONS = ['Pre Work', 'Pour Card', 'During Work', 'After Work', 'General'];
 
+const AUDITOR_NAMES = [
+  'Yogesh Shinde',
+  'Amol Shitole',
+  'Ganesh Deshmukh',
+  'Santosh Iigade',
+  'Nitin Nalawade',
+  'Rajendra Rupnar',
+  'Suraj Khandale',
+  'Ketan Jaykar',
+  'Santosh Patil',
+  'Rahul Mane',
+  'Sujit Chopde',
+  'Subhash Bhandigare'
+];
+
+const AUDITEE_NAMES = [
+  'Dhanajay Chavat',
+  'Jaydeep Patil',
+  'Sujit Shendkar',
+  'Ashvin Pawar',
+  'Sagar Patil'
+];
+
+const SITE_NAMES = [
+  'Era',
+  'Evoque',
+  'Evania',
+  'Elenor',
+  'Equinox',
+  'Exuberance',
+  'Esteban',
+  'Emerald',
+  'Emblem'
+];
+
 const Home = () => {
   const { user, isAdmin } = useAuth();
-  const [checklists, setChecklists] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [isAuditorDropdownOpen, setIsAuditorDropdownOpen] = useState(false);
+  const [isAuditeeDropdownOpen, setIsAuditeeDropdownOpen] = useState(false);
+  const [isSiteDropdownOpen, setIsSiteDropdownOpen] = useState(false);
   const [auditForm, setAuditForm] = useState({
     siteName: '',
     auditorName: '',
@@ -42,20 +79,8 @@ const Home = () => {
     if (user?.role === 'admin') {
       navigate('/admin');
     }
-    fetchChecklists();
     fetchCategories();
   }, [user]);
-
-  const fetchChecklists = async () => {
-    try {
-      const res = await getChecklists();
-      setChecklists(res.data.data);
-    } catch (err) {
-      console.error('Failed to fetch checklists:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchCategories = async () => {
     try {
@@ -70,12 +95,40 @@ const Home = () => {
     }
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.auditor-dropdown-container')) {
+        setIsAuditorDropdownOpen(false);
+      }
+      if (!event.target.closest('.auditee-dropdown-container')) {
+        setIsAuditeeDropdownOpen(false);
+      }
+      if (!event.target.closest('.site-dropdown-container')) {
+        setIsSiteDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleFormChange = (e) => {
     setAuditForm({ ...auditForm, [e.target.name]: e.target.value });
   };
 
   const handleSubmitAudit = (e) => {
     e.preventDefault();
+    if (!auditForm.siteName) {
+      alert("Please select or enter the Name of Site.");
+      return;
+    }
+    if (!auditForm.auditorName) {
+      alert("Please select or enter the Name of Auditor.");
+      return;
+    }
+    if (!auditForm.auditeeName) {
+      alert("Please select or enter the Name of Auditee.");
+      return;
+    }
     if (!selectedCategory) {
       alert("Please select a Stage of Audit first.");
       return;
@@ -83,14 +136,10 @@ const Home = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      // Navigate to dashboard with the selected category as a filter
-      navigate(`/dashboard?category=${encodeURIComponent(selectedCategory)}`);
-    }, 1000);
+      localStorage.setItem('auditForm', JSON.stringify({ ...auditForm, category: selectedCategory }));
+      navigate(`/select-subcategory?category=${encodeURIComponent(selectedCategory)}`);
+    }, 800);
   };
-
-  const filteredChecklists = checklists.filter(
-    (c) => c.category === selectedCategory || selectedCategory === 'All'
-  );
 
   return (
     <div className="page-container bg-brand-gray">
@@ -117,16 +166,46 @@ const Home = () => {
           <div className="p-0">
             {/* Row 1: Site Name + Date */}
             <div className="grid grid-cols-2 border-b border-gray-200">
-              <div className="p-3 border-r border-gray-200">
+              <div className="p-3 border-r border-gray-200 site-dropdown-container relative">
                 <p className="text-xs font-semibold text-brand-orange mb-1">Name Of Site</p>
-                <input
-                  type="text"
-                  name="siteName"
-                  value={auditForm.siteName}
-                  onChange={handleFormChange}
-                  placeholder="Enter site name"
-                  className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-300"
-                />
+                <div
+                  onClick={() => setIsSiteDropdownOpen(!isSiteDropdownOpen)}
+                  className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent flex justify-between items-center cursor-pointer py-1"
+                >
+                  <span className={auditForm.siteName ? "text-gray-700 font-semibold" : "text-gray-300"}>
+                    {auditForm.siteName || "Select site name"}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isSiteDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+
+                {isSiteDropdownOpen && (
+                  <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
+                    {SITE_NAMES.map((name) => (
+                      <div
+                        key={name}
+                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
+                        onClick={() => {
+                          const nextValue = auditForm.siteName === name ? '' : name;
+                          setAuditForm({ ...auditForm, siteName: nextValue });
+                          setIsSiteDropdownOpen(false);
+                        }}
+                      >
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
+                          ${auditForm.siteName === name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
+                          {auditForm.siteName === name && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <span className="text-xs font-semibold text-gray-700">{name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="p-3">
                 <p className="text-xs font-semibold text-brand-orange mb-1">Date</p>
@@ -141,29 +220,89 @@ const Home = () => {
             </div>
 
             {/* Row 2: Auditor Name */}
-            <div className="border-b border-gray-200 p-3">
+            <div className="border-b border-gray-200 p-3 auditor-dropdown-container relative">
               <p className="text-xs font-semibold text-brand-orange mb-1">Name of Auditor</p>
-              <input
-                type="text"
-                name="auditorName"
-                value={auditForm.auditorName}
-                onChange={handleFormChange}
-                placeholder="Enter auditor name"
-                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-300"
-              />
+              <div
+                onClick={() => setIsAuditorDropdownOpen(!isAuditorDropdownOpen)}
+                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent flex justify-between items-center cursor-pointer py-1"
+              >
+                <span className={auditForm.auditorName ? "text-gray-700 font-semibold" : "text-gray-300"}>
+                  {auditForm.auditorName || "Select auditor name"}
+                </span>
+                <svg
+                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isAuditorDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {isAuditorDropdownOpen && (
+                <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
+                  {AUDITOR_NAMES.map((name) => (
+                    <div
+                      key={name}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
+                      onClick={() => {
+                        const nextValue = auditForm.auditorName === name ? '' : name;
+                        setAuditForm({ ...auditForm, auditorName: nextValue });
+                        setIsAuditorDropdownOpen(false);
+                      }}
+                    >
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
+                        ${auditForm.auditorName === name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
+                        {auditForm.auditorName === name && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        )}
+                      </div>
+                      <span className="text-xs font-semibold text-gray-700">{name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Row 3: Auditee Name */}
-            <div className="border-b border-gray-200 p-3">
+            <div className="border-b border-gray-200 p-3 auditee-dropdown-container relative">
               <p className="text-xs font-semibold text-brand-orange mb-1">Name of Auditee</p>
-              <input
-                type="text"
-                name="auditeeName"
-                value={auditForm.auditeeName}
-                onChange={handleFormChange}
-                placeholder="Enter auditee name"
-                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-300"
-              />
+              <div
+                onClick={() => setIsAuditeeDropdownOpen(!isAuditeeDropdownOpen)}
+                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent flex justify-between items-center cursor-pointer py-1"
+              >
+                <span className={auditForm.auditeeName ? "text-gray-700 font-semibold" : "text-gray-300"}>
+                  {auditForm.auditeeName || "Select auditee name"}
+                </span>
+                <svg
+                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isAuditeeDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {isAuditeeDropdownOpen && (
+                <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
+                  {AUDITEE_NAMES.map((name) => (
+                    <div
+                      key={name}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
+                      onClick={() => {
+                        const nextValue = auditForm.auditeeName === name ? '' : name;
+                        setAuditForm({ ...auditForm, auditeeName: nextValue });
+                        setIsAuditeeDropdownOpen(false);
+                      }}
+                    >
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
+                        ${auditForm.auditeeName === name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
+                        {auditForm.auditeeName === name && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        )}
+                      </div>
+                      <span className="text-xs font-semibold text-gray-700">{name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Row 4: Stage of Audit with Category Checkboxes */}
@@ -178,14 +317,12 @@ const Home = () => {
                         ? 'border-brand-orange bg-orange-50 text-brand-orange'
                         : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-orange-300'
                       }`}
-                    onClick={() => setSelectedCategory(selectedCategory === cat.name ? null : cat.name)}
+                    onClick={() => setSelectedCategory(selectedCategory === cat.name ? '' : cat.name)}
                   >
-                    <div className={`w-4 h-4 border-2 rounded flex items-center justify-center flex-shrink-0 transition-all
+                    <div className={`w-4 h-4 border-2 rounded-full flex items-center justify-center flex-shrink-0 transition-all
                       ${selectedCategory === cat.name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
                       {selectedCategory === cat.name && (
-                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
                       )}
                     </div>
                     <span className="text-xs font-semibold">{cat.name}</span>
@@ -194,10 +331,7 @@ const Home = () => {
               </div>
             </div>
 
-            {/* RCC Section Header */}
-            <div className="bg-brand-blue text-white text-center py-2">
-              <p className="font-bold text-sm tracking-wide">{selectedCategory}</p>
-            </div>
+
 
             {/* Row 5: Location + Floor + Column + Flat */}
             <div className="grid grid-cols-2 gap-0 border-b border-gray-200">
@@ -285,16 +419,16 @@ const Home = () => {
                 className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-300"
               />
             </div>
-            
+
             <div className="p-3 bg-gray-50 border-t border-gray-100">
-               <Button 
-                 variant="primary" 
-                 className="w-full" 
-                 onClick={handleSubmitAudit}
-                 loading={loading}
-               >
-                 Submit Internal Audit
-               </Button>
+              <Button
+                variant="primary"
+                className="w-full"
+                onClick={handleSubmitAudit}
+                loading={loading}
+              >
+                Submit Internal Audit
+              </Button>
             </div>
           </div>
         </div>

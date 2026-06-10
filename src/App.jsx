@@ -6,6 +6,7 @@ import AdminRoute from './components/AdminRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
+import SelectSubCategory from './pages/SelectSubCategory';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import Success from './pages/Success';
@@ -25,6 +26,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/select-subcategory"
+            element={
+              <ProtectedRoute>
+                <SelectSubCategory />
               </ProtectedRoute>
             }
           />
