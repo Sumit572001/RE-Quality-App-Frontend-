@@ -20,32 +20,33 @@ const Navbar = () => {
   return (
     <>
       {/* Top Header */}
-      <header className="app-header">
-        <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div>
-              <p className="text-xs text-gray-500 leading-none">Nyati Builders</p>
-              <p className="text-sm font-bold text-brand-blue leading-tight font-heading">Quality App</p>
-            </div>
+      <header className="app-header py-2">
+        <div className="max-w-md mx-auto px-4 flex items-center justify-between">
+          {/* Hamburger Menu Button on Left */}
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="w-10 h-10 bg-[#FFECEC] rounded-full flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-sm"
+            id="nav-menu-btn"
+          >
+            <svg className="w-5 h-5 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          {/* Centered Nyati Logo */}
+          <div className="flex flex-col items-center justify-center">
+            <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="45" fill="#1A3C6E" />
+              {/* Horizontal wave-like line details inside Nyati circle logo */}
+              <path d="M15 35 H85 M15 45 H85 M15 55 H85 M15 65 H85 M15 75 H85" stroke="#FFFFFF" strokeWidth="2.5" opacity="0.25" />
+              {/* White bold N letter */}
+              <text x="50" y="64" fill="#FFFFFF" fontSize="42" fontWeight="900" textAnchor="middle" fontFamily="Outfit, Inter, sans-serif">N</text>
+            </svg>
+            <span className="text-[10px] tracking-[0.2em] font-black text-brand-blue uppercase mt-1 leading-none">NYATI</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            {isAdmin && (
-              <span className="badge-orange text-xs py-0.5">Admin</span>
-            )}
-            <button
-              onClick={() => setShowMenu(!showMenu)}
-              className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center
-                         hover:bg-orange-50 transition-colors relative"
-              id="nav-menu-btn"
-            >
-              <div className="w-8 h-8 bg-gradient-brand rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm font-heading uppercase">
-                  {user?.name?.charAt(0) || 'U'}
-                </span>
-              </div>
-            </button>
-          </div>
+          {/* Spacer to keep logo centered */}
+          <div className="w-10 h-10" />
         </div>
 
         {/* Dropdown Menu */}
