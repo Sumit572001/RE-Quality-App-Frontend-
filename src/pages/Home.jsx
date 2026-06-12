@@ -87,9 +87,6 @@ const Home = () => {
       const res = await getCategories();
       const cats = res.data.data;
       setCategories(cats);
-      if (cats.length > 0) {
-        setSelectedCategory(cats[0].name);
-      }
     } catch (err) {
       console.error('Failed to fetch categories:', err);
     }
