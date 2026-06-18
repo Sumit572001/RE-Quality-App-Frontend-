@@ -47,9 +47,10 @@ const NoIssueModal = ({ checklist, onClose, onSubmit }) => {
   };
 
   const SEVERITY_OPTIONS = [
-    { label: 'Low', color: 'text-green-600', border: 'border-green-500', bg: 'bg-green-50', dot: 'bg-green-500' },
-    { label: 'Medium', color: 'text-yellow-600', border: 'border-yellow-500', bg: 'bg-yellow-50', dot: 'bg-yellow-500' },
-    { label: 'High', color: 'text-red-600', border: 'border-red-500', bg: 'bg-red-50', dot: 'bg-red-500' },
+    { label: 'Mild (2/5)', color: 'text-green-600', border: 'border-green-500', bg: 'bg-green-50', dot: 'bg-green-500', bars: 1 },
+    { label: 'Moderate (1/5)', color: 'text-yellow-600', border: 'border-yellow-500', bg: 'bg-yellow-50', dot: 'bg-yellow-500', bars: 2 },
+    { label: 'Siver (0/5)', color: 'text-orange-600', border: 'border-orange-500', bg: 'bg-orange-50', dot: 'bg-orange-500', bars: 3 },
+    { label: 'Fatal (0/5)', color: 'text-red-600', border: 'border-red-500', bg: 'bg-red-50', dot: 'bg-red-500', bars: 4 },
   ];
 
   return (
@@ -179,7 +180,7 @@ const NoIssueModal = ({ checklist, onClose, onSubmit }) => {
                   </span>
                   {/* Indicator badge */}
                   <div className="ml-auto flex items-center gap-1">
-                    {[...Array(opt.label === 'Low' ? 1 : opt.label === 'Medium' ? 2 : 3)].map((_, i) => (
+                    {[...Array(opt.bars)].map((_, i) => (
                       <div key={i} className={`w-2 h-5 rounded-sm ${severity === opt.label ? opt.dot : 'bg-gray-200'} transition-colors`} />
                     ))}
                   </div>
