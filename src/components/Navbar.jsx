@@ -25,7 +25,7 @@ const Navbar = () => {
           {/* Hamburger Menu Button on Left */}
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="w-10 h-10 bg-[#FFECEC] rounded-full flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-sm"
+            className="w-10 h-10 flex items-center justify-center hover:opacity-80 active:scale-95 transition-all"
             id="nav-menu-btn"
           >
             <svg className="w-5 h-5 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
