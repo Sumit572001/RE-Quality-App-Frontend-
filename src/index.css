@@ -113,7 +113,7 @@
 
   /* Header */
   .app-header {
-    @apply sticky top-0 z-50 bg-white shadow-header;
+    @apply sticky top-0 z-50 bg-white shadow-header rounded-b-3xl;
   }
 
   /* Bottom nav */
