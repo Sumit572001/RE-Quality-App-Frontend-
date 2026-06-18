@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -29,7 +29,7 @@
 @layer components {
   /* Buttons */
   .btn-primary {
-    @apply bg-brand-orange text-white font-semibold py-3 px-6 rounded-xl
+    @apply bg-brand-orange text-brand-blue font-bold py-3 px-6 rounded-xl
            shadow-md hover:bg-brand-orangeDark active:scale-95
            transition-all duration-200 flex items-center justify-center gap-2
            disabled:opacity-50 disabled:cursor-not-allowed;
@@ -42,8 +42,8 @@
   }
 
   .btn-outline {
-    @apply border-2 border-brand-orange text-brand-orange font-semibold py-2.5 px-5 rounded-xl
-           hover:bg-brand-orange hover:text-white active:scale-95
+    @apply border-2 border-brand-blue text-brand-blue font-semibold py-2.5 px-5 rounded-xl
+           hover:bg-brand-blue hover:text-white active:scale-95
            transition-all duration-200 flex items-center justify-center gap-2;
   }
 
@@ -182,18 +182,18 @@
 
 @layer utilities {
   .text-gradient-orange {
-    background: linear-gradient(135deg, #E8690A, #F5821F);
+    background: linear-gradient(135deg, #84CC16, #A3E635);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .bg-gradient-brand {
-    background: linear-gradient(135deg, #1A3C6E 0%, #2151A1 100%);
+    background: linear-gradient(135deg, #0F0F11 0%, #1F1F23 100%);
   }
 
   .bg-gradient-orange {
-    background: linear-gradient(135deg, #E8690A 0%, #F5821F 100%);
+    background: linear-gradient(135deg, #A3E635 0%, #BEF264 100%);
   }
 
   .safe-bottom {

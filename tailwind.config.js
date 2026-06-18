@@ -5,20 +5,20 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          orange: '#E8690A',
-          orangeLight: '#F5821F',
-          orangeDark: '#C4570A',
-          blue: '#1A3C6E',
-          blueLight: '#2151A1',
-          blueDark: '#0F2347',
-          gold: '#D4A017',
-          cream: '#FFF8F0',
-          gray: '#F4F5F7',
+          orange: '#A3E635',
+          orangeLight: '#BEF264',
+          orangeDark: '#84CC16',
+          blue: '#0F0F11',
+          blueLight: '#1F1F23',
+          blueDark: '#000000',
+          gold: '#84CC16',
+          cream: '#F4F8EC',
+          gray: '#F6F8F5',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        heading: ['Outfit', 'Inter', 'sans-serif'],
+        sans: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
+        heading: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         card: '0 4px 20px rgba(0,0,0,0.08)',
