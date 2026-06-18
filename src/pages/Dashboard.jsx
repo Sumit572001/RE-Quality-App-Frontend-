@@ -267,6 +267,8 @@ const Dashboard = () => {
     return acc;
   }, {});
 
+  const totalSubCategoryMarks = filtered.reduce((sum, c) => sum + (c.items?.[0]?.mark || 0), 0);
+
   const togglePopover = (checklistId) => {
     setActivePopoverId((prev) => (prev === checklistId ? null : checklistId));
   };
@@ -369,8 +371,11 @@ const Dashboard = () => {
             {Object.entries(checklistsByStage).map(([stage, stageChecklists]) => (
               <div key={stage} className="overflow-hidden bg-white rounded-2xl border border-gray-200 shadow-sm">
                 {/* Blue Header */}
-                <div className="bg-brand-blue text-white font-heading font-bold text-center py-4 px-4 text-sm uppercase tracking-wider">
-                  {activeSubCategory || 'Audit Checklist'}
+                <div className="bg-brand-blue text-white font-heading font-bold text-center py-4 px-4 text-sm uppercase tracking-wider flex justify-center items-center gap-2">
+                  <span>{activeSubCategory || 'Audit Checklist'}</span>
+                  <span className="bg-white/20 px-2 py-0.5 rounded text-xs font-black">
+                    {totalSubCategoryMarks} Marks
+                  </span>
                 </div>
 
                 {/* Body */}
@@ -391,10 +396,15 @@ const Dashboard = () => {
                             className={`flex items-center justify-between p-4 bg-white rounded-2xl border cursor-pointer transition-all duration-200 select-none shadow-sm hover:shadow-md
                               ${isSelected ? 'border-brand-orange/30' : 'border-gray-200/80 hover:border-brand-orange/30'}`}
                           >
-                            <span className={`text-xs font-bold leading-relaxed flex-1 pr-4 transition-colors ${isSelected ? 'text-gray-500' : 'text-gray-800'}`}>
-                              {checklist.title}
+                            <span className={`text-xs font-bold leading-relaxed flex-1 pr-4 transition-colors ${isSelected ? 'text-gray-500' : 'text-gray-800'} flex items-center flex-wrap gap-1.5`}>
+                              <span>{checklist.title}</span>
                               {checklist.items?.[0]?.required && (
-                                <span className="text-red-500 ml-1 font-bold" title="Required">*</span>
+                                <span className="text-red-500 font-bold" title="Required">*</span>
+                              )}
+                              {checklist.items?.[0]?.mark !== undefined && (
+                                <span className="text-[10px] font-bold text-brand-orange bg-orange-50 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                  {checklist.items[0].mark} Marks
+                                </span>
                               )}
                             </span>
                             {renderCheckbox(checklist._id)}

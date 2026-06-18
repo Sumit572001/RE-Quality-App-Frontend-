@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getCategories } from '../api/categories';
 import { getSubCategories } from '../api/subcategories';
+import { getChecklists } from '../api/checklists';
 import Navbar from '../components/Navbar';
 import { getFormattedCategoryName } from '../utils/categoryHelper';
 
@@ -11,6 +12,7 @@ const SelectSubCategory = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
+  const [checklists, setChecklists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
@@ -24,13 +26,15 @@ const SelectSubCategory = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [catsRes, subsRes] = await Promise.all([
+      const [catsRes, subsRes, checklistsRes] = await Promise.all([
         getCategories(),
         getSubCategories(),
+        getChecklists(),
       ]);
       const cats = catsRes.data.data;
       setCategories(cats);
       setSubCategories(subsRes.data.data);
+      setChecklists(checklistsRes.data.data);
 
       const searchParams = new URLSearchParams(window.location.search);
       const categoryParam = searchParams.get('category');
@@ -63,6 +67,14 @@ const SelectSubCategory = () => {
     }
     return subCatVal === selectedCategory._id;
   });
+
+  const getSubCategoryTotalMarks = (subName) => {
+    if (!selectedCategory) return 0;
+    const matchingChecklists = checklists.filter(
+      (c) => c.category === selectedCategory.name && c.subCategory === subName
+    );
+    return matchingChecklists.reduce((sum, c) => sum + (c.items?.[0]?.mark || 0), 0);
+  };
 
   return (
     <div className="page-container bg-brand-gray pb-10">
@@ -119,14 +131,19 @@ const SelectSubCategory = () => {
                       onClick={() => navigate(`/dashboard?category=${encodeURIComponent(selectedCategory.name)}&subCategory=${encodeURIComponent(sub.name)}`)}
                       className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 hover:border-brand-orange hover:shadow-sm cursor-pointer transition-all duration-200 group"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-brand-orange group-hover:bg-brand-orange group-hover:text-white transition-colors duration-200">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                          </svg>
+                      <div className="flex items-center justify-between flex-1 pr-2 min-w-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-brand-orange group-hover:bg-brand-orange group-hover:text-white transition-colors duration-200 flex-shrink-0">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                          </div>
+                          <span className="text-xs font-bold text-gray-700 leading-tight group-hover:text-brand-orange transition-colors truncate">
+                            {sub.name}
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-gray-700 leading-tight group-hover:text-brand-orange transition-colors">
-                          {sub.name}
+                        <span className="text-[10px] font-black text-brand-orange bg-orange-50 px-2.5 py-1 rounded-full whitespace-nowrap border border-orange-100 flex-shrink-0">
+                          {getSubCategoryTotalMarks(sub.name)} Marks
                         </span>
                       </div>
                       <svg
