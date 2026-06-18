@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getChecklists } from '../api/checklists';
 import Navbar from '../components/Navbar';
+import { getFormattedCategoryName } from '../utils/categoryHelper';
 
 /* ─────────────────────────────────────────────
    NO-Issue Modal — camera upload + severity
@@ -361,7 +362,7 @@ const Dashboard = () => {
           <div className="card text-center py-12">
             <p className="text-5xl mb-3">📋</p>
             <p className="font-semibold text-gray-600 mb-1">No checklists found</p>
-            <p className="text-sm text-gray-400">No checklists in {activeCategory} - {activeSubCategory}</p>
+            <p className="text-sm text-gray-400">No checklists in {getFormattedCategoryName(activeCategory)} - {activeSubCategory}</p>
           </div>
         ) : (
           <div className="space-y-6">

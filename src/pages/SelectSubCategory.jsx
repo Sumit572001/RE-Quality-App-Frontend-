@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { getCategories } from '../api/categories';
 import { getSubCategories } from '../api/subcategories';
 import Navbar from '../components/Navbar';
+import { getFormattedCategoryName } from '../utils/categoryHelper';
 
 const SelectSubCategory = () => {
   const { user } = useAuth();
@@ -89,7 +90,7 @@ const SelectSubCategory = () => {
               )}
             </div>
             {selectedCategory && (
-              <p className="text-xs text-gray-500 mt-0.5">Stage of Audit: <span className="font-bold text-brand-orange">{selectedCategory.name}</span></p>
+              <p className="text-xs text-gray-500 mt-0.5">Stage of Audit: <span className="font-bold text-brand-orange">{getFormattedCategoryName(selectedCategory.name)}</span></p>
             )}
           </div>
         </div>

@@ -11,6 +11,7 @@ import {
   getSubCategories, createSubCategory, updateSubCategory, deleteSubCategory
 } from '../api/subcategories';
 import Toast from '../components/ui/Toast';
+import { getFormattedCategoryName, sortCategories } from '../utils/categoryHelper';
 
 const TABS = [
   { id: 'checklist', label: 'CHECKLIST', icon: '📋' },
@@ -411,8 +412,8 @@ const AdminPanel = () => {
                     className="w-full bg-[#f8fafc] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
                   >
                     <option value="">-- Select Category --</option>
-                    {categories.map((cat) => (
-                      <option key={cat._id} value={cat.name}>{cat.name}</option>
+                    {sortCategories(categories).map((cat) => (
+                      <option key={cat._id} value={cat.name}>{getFormattedCategoryName(cat.name)}</option>
                     ))}
                   </select>
                 </div>
@@ -485,8 +486,8 @@ const AdminPanel = () => {
                               onChange={(e) => handleEditChecklistCategoryChange(e.target.value)}
                               className="w-full bg-[#f8fafc] border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-100"
                             >
-                              {categories.map(cat => (
-                                <option key={cat._id} value={cat.name}>{cat.name}</option>
+                              {sortCategories(categories).map(cat => (
+                                <option key={cat._id} value={cat.name}>{getFormattedCategoryName(cat.name)}</option>
                               ))}
                             </select>
                           </div>
@@ -533,7 +534,7 @@ const AdminPanel = () => {
                       <>
                         <div className="flex-1 min-w-0 pr-4">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[9px] font-black text-[#E8690A] uppercase tracking-tighter">{c.category}</span>
+                            <span className="text-[9px] font-black text-[#E8690A] uppercase tracking-tighter">{getFormattedCategoryName(c.category)}</span>
                             {c.subCategory && (
                               <span className="text-[9px] font-black text-[#0051FF] uppercase tracking-tighter">{c.subCategory}</span>
                             )}
@@ -605,7 +606,7 @@ const AdminPanel = () => {
                 </div>
               </div>
               <div className="p-4 space-y-2 max-h-[400px] overflow-y-auto bg-[#F8FAFC]">
-                {categories.map((cat) => (
+                {sortCategories(categories).map((cat) => (
                   <div key={cat._id} className="bg-white border border-gray-100 p-5 rounded-xl flex items-center justify-between group shadow-sm">
                     {editingCategoryId === cat._id ? (
                       <div className="flex-1 flex gap-2">
@@ -663,8 +664,8 @@ const AdminPanel = () => {
                     className="w-full bg-[#f8fafc] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
                   >
                     <option value="">-- Select Category --</option>
-                    {categories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>{cat.name}</option>
+                    {sortCategories(categories).map((cat) => (
+                      <option key={cat._id} value={cat._id}>{getFormattedCategoryName(cat.name)}</option>
                     ))}
                   </select>
                 </div>
@@ -708,8 +709,8 @@ const AdminPanel = () => {
                           className="bg-[#f8fafc] border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none"
                         >
                           <option value="">-- Parent Category --</option>
-                          {categories.map(c => (
-                            <option key={c._id} value={c._id}>{c.name}</option>
+                          {sortCategories(categories).map(c => (
+                            <option key={c._id} value={c._id}>{getFormattedCategoryName(c.name)}</option>
                           ))}
                         </select>
                         <input
@@ -728,7 +729,7 @@ const AdminPanel = () => {
                         <div>
                           <span className="text-gray-800 font-bold text-sm">{sub.name}</span>
                           <p className="text-[9px] text-[#E8690A] font-black uppercase tracking-tighter mt-0.5">
-                            Category: {sub.category?.name || 'Unknown'}
+                            Category: {getFormattedCategoryName(sub.category?.name) || 'Unknown'}
                           </p>
                         </div>
                         <div className="flex items-center gap-1">

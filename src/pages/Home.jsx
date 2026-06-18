@@ -8,6 +8,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Badge from '../components/ui/Badge';
 import { CardSkeleton } from '../components/ui/Skeleton';
+import { getFormattedCategoryName, sortCategories } from '../utils/categoryHelper';
 
 const STAGE_OPTIONS = ['Pre Work', 'Pour Card', 'During Work', 'After Work', 'General'];
 
@@ -35,15 +36,15 @@ const AUDITEE_NAMES = [
 ];
 
 const SITE_NAMES = [
-  'Era',
-  'Evoque',
-  'Evania',
-  'Elenor',
-  'Equinox',
-  'Exuberance',
-  'Esteban',
-  'Emerald',
-  'Emblem'
+  'Nyati Era',
+  'Nyati Evoque',
+  'Nyati Evania',
+  'Nyati Elenor',
+  'Nyati Equinox',
+  'Nyati Exuberance',
+  'Nyati Esteban',
+  'Nyati Emerald',
+  'Nyati Emblem'
 ];
 
 const Home = () => {
@@ -306,7 +307,7 @@ const Home = () => {
             <div className="border-b border-gray-200 p-3">
               <p className="text-xs font-semibold text-brand-orange mb-2">Stage of Audit</p>
               <div className="grid grid-cols-2 gap-2">
-                {categories.map((cat) => (
+                {sortCategories(categories).map((cat) => (
                   <label
                     key={cat._id}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all duration-150
@@ -322,7 +323,7 @@ const Home = () => {
                         <div className="w-1.5 h-1.5 rounded-full bg-white" />
                       )}
                     </div>
-                    <span className="text-xs font-semibold">{cat.name}</span>
+                    <span className="text-xs font-semibold">{getFormattedCategoryName(cat.name)}</span>
                   </label>
                 ))}
               </div>
