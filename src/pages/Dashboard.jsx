@@ -47,7 +47,7 @@ const NoIssueModal = ({ checklist, onClose, onSubmit }) => {
   };
 
   const SEVERITY_OPTIONS = [
-    { label: 'Mild (2/5)', color: 'text-green-600', border: 'border-green-500', bg: 'bg-green-50', dot: 'bg-green-500', bars: 1 },
+    { label: 'Mild (2/5)', color: 'text-[#4B5694]', border: 'border-[#4B5694]', bg: 'bg-[#4B5694]/10', dot: 'bg-[#4B5694]', bars: 1 },
     { label: 'Moderate (1/5)', color: 'text-yellow-600', border: 'border-yellow-500', bg: 'bg-yellow-50', dot: 'bg-yellow-500', bars: 2 },
     { label: 'Siver (0/5)', color: 'text-orange-600', border: 'border-orange-500', bg: 'bg-orange-50', dot: 'bg-orange-500', bars: 3 },
     { label: 'Fatal (0/5)', color: 'text-red-600', border: 'border-red-500', bg: 'bg-red-50', dot: 'bg-red-500', bars: 4 },
@@ -317,7 +317,7 @@ const Dashboard = () => {
     const choice = checkedChecklists[checklistId];
     if (choice === 'YES') {
       return (
-        <div className="w-8 h-8 rounded-lg border-2 border-green-500 bg-green-500 flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 rounded-lg border-2 border-[#4B5694] bg-[#4B5694] flex items-center justify-center flex-shrink-0">
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
           </svg>
@@ -403,7 +403,7 @@ const Dashboard = () => {
                                 <span className="text-red-500 font-bold" title="Required">*</span>
                               )}
                               {checklist.items?.[0]?.mark !== undefined && (
-                                <span className="text-[10px] font-bold text-brand-orange bg-orange-50 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                <span className="text-[10px] font-bold text-brand-orange bg-brand-orange/10 px-2 py-0.5 rounded-full whitespace-nowrap">
                                   {checklist.items[0].mark} Marks
                                 </span>
                               )}
@@ -427,10 +427,10 @@ const Dashboard = () => {
                                   onClick={() => handleSelectOption(checklist, 'YES')}
                                   className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl border-2 transition-all duration-200
                                     ${checkedChecklists[checklist._id] === 'YES'
-                                      ? 'border-green-500 bg-green-50 text-green-700 font-bold'
+                                      ? 'border-[#4B5694] bg-[#4B5694]/10 text-[#4B5694] font-bold'
                                       : 'border-gray-200 hover:bg-gray-50 text-gray-500 bg-white'}`}
                                 >
-                                  <svg className="w-6 h-6 text-green-500 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-6 h-6 text-[#4B5694] mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
                                   </svg>
                                   <span className="text-[11px] font-bold">YES</span>

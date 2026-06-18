@@ -526,7 +526,7 @@ const AdminPanel = () => {
                           </div>
                         </div>
                         <div className="flex gap-2 justify-end mt-1">
-                          <button onClick={() => handleSaveChecklist(c._id)} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
+                          <button onClick={() => handleSaveChecklist(c._id)} className="bg-[#4B5694] hover:bg-[#353E73] text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
                           <button onClick={() => setEditingChecklistId(null)} className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Cancel</button>
                         </div>
                       </div>
@@ -616,7 +616,7 @@ const AdminPanel = () => {
                           onChange={(e) => setEditCategoryName(e.target.value)}
                           className="bg-[#f8fafc] border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none flex-1"
                         />
-                        <button onClick={() => handleSaveCategory(cat._id)} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
+                        <button onClick={() => handleSaveCategory(cat._id)} className="bg-[#4B5694] hover:bg-[#353E73] text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
                         <button onClick={() => setEditingCategoryId(null)} className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Cancel</button>
                       </div>
                     ) : (
@@ -720,7 +720,7 @@ const AdminPanel = () => {
                           className="bg-[#f8fafc] border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none flex-1"
                         />
                         <div className="flex gap-1">
-                          <button onClick={() => handleSaveSubCategory(sub._id)} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
+                          <button onClick={() => handleSaveSubCategory(sub._id)} className="bg-[#4B5694] hover:bg-[#353E73] text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
                           <button onClick={() => setEditingSubCategoryId(null)} className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Cancel</button>
                         </div>
                       </div>

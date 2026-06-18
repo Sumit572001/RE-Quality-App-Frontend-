@@ -5,15 +5,15 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          orange: '#A3E635',
-          orangeLight: '#BEF264',
-          orangeDark: '#84CC16',
+          orange: '#4B5694',
+          orangeLight: '#8D99CC',
+          orangeDark: '#353E73',
           blue: '#0F0F11',
           blueLight: '#1F1F23',
           blueDark: '#000000',
-          gold: '#84CC16',
-          cream: '#F4F8EC',
-          gray: '#F6F8F5',
+          gold: '#353E73',
+          cream: '#F2F4FA',
+          gray: '#F6F7FA',
         },
       },
       fontFamily: {

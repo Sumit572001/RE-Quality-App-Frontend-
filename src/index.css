@@ -29,7 +29,7 @@
 @layer components {
   /* Buttons */
   .btn-primary {
-    @apply bg-brand-orange text-brand-blue font-bold py-3 px-6 rounded-xl
+    @apply bg-brand-orange text-white font-bold py-3 px-6 rounded-xl
            shadow-md hover:bg-brand-orangeDark active:scale-95
            transition-all duration-200 flex items-center justify-center gap-2
            disabled:opacity-50 disabled:cursor-not-allowed;
@@ -54,8 +54,8 @@
   }
 
   .btn-success {
-    @apply bg-green-500 text-white font-semibold py-2 px-4 rounded-lg
-           hover:bg-green-600 active:scale-95 transition-all duration-200
+    @apply bg-[#4B5694] text-white font-semibold py-2 px-4 rounded-lg
+           hover:bg-[#353E73] active:scale-95 transition-all duration-200
            flex items-center justify-center gap-1.5;
   }
 
@@ -104,7 +104,7 @@
   }
 
   .badge-green {
-    @apply badge bg-green-100 text-green-700;
+    @apply badge bg-[#4B5694]/10 text-[#4B5694];
   }
 
   .badge-red {
@@ -152,7 +152,7 @@
   }
 
   .toast-success {
-    @apply toast bg-green-500 text-white;
+    @apply toast bg-[#4B5694] text-white;
   }
 
   .toast-error {
@@ -182,7 +182,7 @@
 
 @layer utilities {
   .text-gradient-orange {
-    background: linear-gradient(135deg, #84CC16, #A3E635);
+    background: linear-gradient(135deg, #353E73, #4B5694);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -193,7 +193,7 @@
   }
 
   .bg-gradient-orange {
-    background: linear-gradient(135deg, #A3E635 0%, #BEF264 100%);
+    background: linear-gradient(135deg, #4B5694 0%, #8D99CC 100%);
   }
 
   .safe-bottom {

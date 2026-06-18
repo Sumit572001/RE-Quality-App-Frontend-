@@ -25,7 +25,7 @@ const Toast = ({ message, type = 'success', onClose }) => {
   };
 
   const bgColors = {
-    success: 'bg-green-500',
+    success: 'bg-[#4B5694]',
     error: 'bg-red-500',
     info: 'bg-blue-500'
   };
