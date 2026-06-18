@@ -145,12 +145,12 @@ const Home = () => {
 
       <main className="px-4 pt-4 pb-24 animate-fade-in">
         {/* Greeting Banner */}
-        <div className="bg-gradient-brand rounded-2xl p-5 mb-5 shadow-card relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-          <p className="text-blue-200 text-xs font-medium mb-1">Good {getGreeting()},</p>
-          <h2 className="text-white text-xl font-heading font-bold mb-0.5">{user?.name || 'Welcome'}</h2>
-          <p className="text-blue-200 text-xs">{today}</p>
+        <div className="bg-gradient-orange rounded-2xl p-5 mb-5 shadow-card relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-20 h-20 bg-brand-blue/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+          <p className="text-brand-blue/70 text-xs font-semibold mb-1">Good {getGreeting()},</p>
+          <h2 className="text-brand-blue text-xl font-heading font-black mb-0.5">{user?.name || 'Welcome'}</h2>
+          <p className="text-brand-blue/70 text-xs font-semibold">{today}</p>
         </div>
 
         {/* Page Heading */}
