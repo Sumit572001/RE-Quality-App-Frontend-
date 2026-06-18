@@ -153,282 +153,293 @@ const Home = () => {
           <p className="text-blue-200 text-xs">{today}</p>
         </div>
 
-        {/* Audit Checklist Form — Matching the Excel Design */}
-        <div className="card mb-5 p-0 overflow-hidden">
-          {/* Header */}
-          <div className="bg-blue-700 text-white text-center py-2 px-4">
-            <p className="font-semibold text-sm">QA - Internal Audit Checklist</p>
+        {/* Page Heading */}
+        <div className="mb-5 flex items-center justify-between">
+          <h1 className="text-base font-heading font-black text-brand-blue tracking-tight uppercase">
+            QA - Internal Audit Checklist
+          </h1>
+        </div>
+
+        {/* Form Fields as Separate Cards */}
+        <div className="space-y-3">
+          {/* Row 1: Site Name + Date */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Site Name Box */}
+            <div className="card p-3.5 relative site-dropdown-container flex flex-col justify-center">
+              <p className="text-xs font-bold text-brand-blue mb-1">Name Of Site</p>
+              <div
+                onClick={() => setIsSiteDropdownOpen(!isSiteDropdownOpen)}
+                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent flex justify-between items-center cursor-pointer py-1"
+              >
+                <span className={auditForm.siteName ? "text-gray-700 font-semibold" : "text-gray-300"}>
+                  {auditForm.siteName || "Select site name"}
+                </span>
+                <svg
+                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isSiteDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+
+              {isSiteDropdownOpen && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
+                  {SITE_NAMES.map((name) => (
+                    <div
+                      key={name}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
+                      onClick={() => {
+                        const nextValue = auditForm.siteName === name ? '' : name;
+                        setAuditForm({ ...auditForm, siteName: nextValue });
+                        setIsSiteDropdownOpen(false);
+                      }}
+                    >
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
+                        ${auditForm.siteName === name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
+                        {auditForm.siteName === name && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        )}
+                      </div>
+                      <span className="text-xs font-semibold text-gray-700">{name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Date Box */}
+            <div className="card p-3.5 flex flex-col justify-center">
+              <p className="text-xs font-bold text-brand-blue mb-1">Date</p>
+              <input
+                type="date"
+                name="date"
+                value={auditForm.date}
+                onChange={handleFormChange}
+                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent py-1"
+              />
+            </div>
           </div>
 
-          {/* Form Fields Grid */}
-          <div className="p-0">
-            {/* Row 1: Site Name + Date */}
-            <div className="grid grid-cols-2 border-b border-gray-200">
-              <div className="p-3 border-r border-gray-200 site-dropdown-container relative">
-                <p className="text-xs font-semibold text-brand-orange mb-1">Name Of Site</p>
-                <div
-                  onClick={() => setIsSiteDropdownOpen(!isSiteDropdownOpen)}
-                  className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent flex justify-between items-center cursor-pointer py-1"
-                >
-                  <span className={auditForm.siteName ? "text-gray-700 font-semibold" : "text-gray-300"}>
-                    {auditForm.siteName || "Select site name"}
-                  </span>
-                  <svg
-                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isSiteDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-
-                {isSiteDropdownOpen && (
-                  <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
-                    {SITE_NAMES.map((name) => (
-                      <div
-                        key={name}
-                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
-                        onClick={() => {
-                          const nextValue = auditForm.siteName === name ? '' : name;
-                          setAuditForm({ ...auditForm, siteName: nextValue });
-                          setIsSiteDropdownOpen(false);
-                        }}
-                      >
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
-                          ${auditForm.siteName === name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
-                          {auditForm.siteName === name && (
-                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                          )}
-                        </div>
-                        <span className="text-xs font-semibold text-gray-700">{name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="p-3">
-                <p className="text-xs font-semibold text-brand-orange mb-1">Date</p>
-                <input
-                  type="date"
-                  name="date"
-                  value={auditForm.date}
-                  onChange={handleFormChange}
-                  className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent"
-                />
-              </div>
-            </div>
-
-            {/* Row 2: Auditor Name */}
-            <div className="border-b border-gray-200 p-3 auditor-dropdown-container relative">
-              <p className="text-xs font-semibold text-brand-orange mb-1">Name of Auditor</p>
-              <div
-                onClick={() => setIsAuditorDropdownOpen(!isAuditorDropdownOpen)}
-                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent flex justify-between items-center cursor-pointer py-1"
+          {/* Row 2: Auditor Name Box */}
+          <div className="card p-3.5 auditor-dropdown-container relative flex flex-col justify-center">
+            <p className="text-xs font-bold text-brand-blue mb-1">Name of Auditor</p>
+            <div
+              onClick={() => setIsAuditorDropdownOpen(!isAuditorDropdownOpen)}
+              className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent flex justify-between items-center cursor-pointer py-1"
+            >
+              <span className={auditForm.auditorName ? "text-gray-700 font-semibold" : "text-gray-300"}>
+                {auditForm.auditorName || "Select auditor name"}
+              </span>
+              <svg
+                className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isAuditorDropdownOpen ? 'rotate-180' : ''}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
               >
-                <span className={auditForm.auditorName ? "text-gray-700 font-semibold" : "text-gray-300"}>
-                  {auditForm.auditorName || "Select auditor name"}
-                </span>
-                <svg
-                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isAuditorDropdownOpen ? 'rotate-180' : ''}`}
-                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-
-              {isAuditorDropdownOpen && (
-                <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
-                  {AUDITOR_NAMES.map((name) => (
-                    <div
-                      key={name}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
-                      onClick={() => {
-                        const nextValue = auditForm.auditorName === name ? '' : name;
-                        setAuditForm({ ...auditForm, auditorName: nextValue });
-                        setIsAuditorDropdownOpen(false);
-                      }}
-                    >
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
-                        ${auditForm.auditorName === name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
-                        {auditForm.auditorName === name && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                        )}
-                      </div>
-                      <span className="text-xs font-semibold text-gray-700">{name}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
 
-            {/* Row 3: Auditee Name */}
-            <div className="border-b border-gray-200 p-3 auditee-dropdown-container relative">
-              <p className="text-xs font-semibold text-brand-orange mb-1">Name of Auditee</p>
-              <div
-                onClick={() => setIsAuditeeDropdownOpen(!isAuditeeDropdownOpen)}
-                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent flex justify-between items-center cursor-pointer py-1"
-              >
-                <span className={auditForm.auditeeName ? "text-gray-700 font-semibold" : "text-gray-300"}>
-                  {auditForm.auditeeName || "Select auditee name"}
-                </span>
-                <svg
-                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isAuditeeDropdownOpen ? 'rotate-180' : ''}`}
-                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-
-              {isAuditeeDropdownOpen && (
-                <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
-                  {AUDITEE_NAMES.map((name) => (
-                    <div
-                      key={name}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
-                      onClick={() => {
-                        const nextValue = auditForm.auditeeName === name ? '' : name;
-                        setAuditForm({ ...auditForm, auditeeName: nextValue });
-                        setIsAuditeeDropdownOpen(false);
-                      }}
-                    >
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
-                        ${auditForm.auditeeName === name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
-                        {auditForm.auditeeName === name && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                        )}
-                      </div>
-                      <span className="text-xs font-semibold text-gray-700">{name}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Row 4: Stage of Audit with Category Checkboxes */}
-            <div className="border-b border-gray-200 p-3">
-              <p className="text-xs font-semibold text-brand-orange mb-2">Stage of Audit</p>
-              <div className="grid grid-cols-2 gap-2">
-                {sortCategories(categories).map((cat) => (
-                  <label
-                    key={cat._id}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all duration-150
-                      ${selectedCategory === cat.name
-                        ? 'border-brand-orange bg-orange-50 text-brand-orange'
-                        : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-orange-300'
-                      }`}
-                    onClick={() => setSelectedCategory(selectedCategory === cat.name ? '' : cat.name)}
+            {isAuditorDropdownOpen && (
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
+                {AUDITOR_NAMES.map((name) => (
+                  <div
+                    key={name}
+                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
+                    onClick={() => {
+                      const nextValue = auditForm.auditorName === name ? '' : name;
+                      setAuditForm({ ...auditForm, auditorName: nextValue });
+                      setIsAuditorDropdownOpen(false);
+                    }}
                   >
-                    <div className={`w-4 h-4 border-2 rounded-full flex items-center justify-center flex-shrink-0 transition-all
-                      ${selectedCategory === cat.name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
-                      {selectedCategory === cat.name && (
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
+                      ${auditForm.auditorName === name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
+                      {auditForm.auditorName === name && (
                         <div className="w-1.5 h-1.5 rounded-full bg-white" />
                       )}
                     </div>
-                    <span className="text-xs font-semibold">{getFormattedCategoryName(cat.name)}</span>
-                  </label>
+                    <span className="text-xs font-semibold text-gray-700">{name}</span>
+                  </div>
                 ))}
               </div>
-            </div>
+            )}
+          </div>
 
-
-
-            {/* Row 5: Location + Floor + Column + Flat */}
-            <div className="grid grid-cols-2 gap-0 border-b border-gray-200">
-              <div className="p-3 border-r border-gray-200">
-                <p className="text-xs font-semibold text-brand-orange mb-1">Location</p>
-                <input
-                  type="text"
-                  name="location"
-                  value={auditForm.location}
-                  onChange={handleFormChange}
-                  placeholder="Enter location"
-                  className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-300"
-                />
-              </div>
-              <div className="p-3">
-                <p className="text-xs font-semibold text-brand-orange mb-1">Floor No.</p>
-                <input
-                  type="text"
-                  name="floor"
-                  value={auditForm.floor}
-                  onChange={handleFormChange}
-                  placeholder="Floor"
-                  className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-300"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-0 border-b border-gray-200">
-              <div className="p-3 border-r border-gray-200">
-                <p className="text-xs font-semibold text-brand-orange mb-1">Column No.</p>
-                <input
-                  type="text"
-                  name="columnNo"
-                  value={auditForm.columnNo}
-                  onChange={handleFormChange}
-                  placeholder="Column"
-                  className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-300"
-                />
-              </div>
-              <div className="p-3">
-                <p className="text-xs font-semibold text-brand-orange mb-1">Flat No.</p>
-                <input
-                  type="text"
-                  name="flatNo"
-                  value={auditForm.flatNo}
-                  onChange={handleFormChange}
-                  placeholder="Flat"
-                  className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-300"
-                />
-              </div>
-            </div>
-
-            {/* Row 6: Building Name + Pour + Beam */}
-            <div className="grid grid-cols-2 gap-0 border-b border-gray-200">
-              <div className="p-3 border-r border-gray-200">
-                <p className="text-xs font-semibold text-brand-orange mb-1">Building Name/No.</p>
-                <input
-                  type="text"
-                  name="buildingName"
-                  value={auditForm.buildingName}
-                  onChange={handleFormChange}
-                  placeholder="Building"
-                  className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-300"
-                />
-              </div>
-              <div className="p-3">
-                <p className="text-xs font-semibold text-brand-orange mb-1">Pour</p>
-                <input
-                  type="text"
-                  name="pour"
-                  value={auditForm.pour}
-                  onChange={handleFormChange}
-                  placeholder="Pour no."
-                  className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-300"
-                />
-              </div>
-            </div>
-            <div className="p-3">
-              <p className="text-xs font-semibold text-brand-orange mb-1">Beam No.</p>
-              <input
-                type="text"
-                name="beamNo"
-                value={auditForm.beamNo}
-                onChange={handleFormChange}
-                placeholder="Enter beam number"
-                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-300"
-              />
-            </div>
-
-            <div className="p-3 bg-gray-50 border-t border-gray-100">
-              <Button
-                variant="primary"
-                className="w-full"
-                onClick={handleSubmitAudit}
-                loading={loading}
+          {/* Row 3: Auditee Name Box */}
+          <div className="card p-3.5 auditee-dropdown-container relative flex flex-col justify-center">
+            <p className="text-xs font-bold text-brand-blue mb-1">Name of Auditee</p>
+            <div
+              onClick={() => setIsAuditeeDropdownOpen(!isAuditeeDropdownOpen)}
+              className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent flex justify-between items-center cursor-pointer py-1"
+            >
+              <span className={auditForm.auditeeName ? "text-gray-700 font-semibold" : "text-gray-300"}>
+                {auditForm.auditeeName || "Select auditee name"}
+              </span>
+              <svg
+                className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isAuditeeDropdownOpen ? 'rotate-180' : ''}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
               >
-                Submit Internal Audit
-              </Button>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+
+            {isAuditeeDropdownOpen && (
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-60 overflow-y-auto">
+                {AUDITEE_NAMES.map((name) => (
+                  <div
+                    key={name}
+                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
+                    onClick={() => {
+                      const nextValue = auditForm.auditeeName === name ? '' : name;
+                      setAuditForm({ ...auditForm, auditeeName: nextValue });
+                      setIsAuditeeDropdownOpen(false);
+                    }}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all
+                      ${auditForm.auditeeName === name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
+                      {auditForm.auditeeName === name && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </div>
+                    <span className="text-xs font-semibold text-gray-700">{name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Row 4: Stage of Audit Box */}
+          <div className="card p-3.5 flex flex-col justify-center">
+            <p className="text-xs font-bold text-brand-blue mb-2.5">Stage of Audit</p>
+            <div className="grid grid-cols-2 gap-2">
+              {sortCategories(categories).map((cat) => (
+                <label
+                  key={cat._id}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border cursor-pointer transition-all duration-150
+                    ${selectedCategory === cat.name
+                      ? 'border-brand-orange bg-brand-orange/10 text-brand-blue font-bold'
+                      : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-brand-orange/50'
+                    }`}
+                  onClick={() => setSelectedCategory(selectedCategory === cat.name ? '' : cat.name)}
+                >
+                  <div className={`w-4 h-4 border-2 rounded-full flex items-center justify-center flex-shrink-0 transition-all
+                    ${selectedCategory === cat.name ? 'border-brand-orange bg-brand-orange' : 'border-gray-300'}`}>
+                    {selectedCategory === cat.name && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                    )}
+                  </div>
+                  <span className="text-xs font-semibold">{getFormattedCategoryName(cat.name)}</span>
+                </label>
+              ))}
             </div>
           </div>
+
+          {/* Row 5: Location + Floor */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Location Box */}
+            <div className="card p-3.5 flex flex-col justify-center">
+              <p className="text-xs font-bold text-brand-blue mb-1">Location</p>
+              <input
+                type="text"
+                name="location"
+                value={auditForm.location}
+                onChange={handleFormChange}
+                placeholder="Enter location"
+                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-350 py-1"
+              />
+            </div>
+            {/* Floor Box */}
+            <div className="card p-3.5 flex flex-col justify-center">
+              <p className="text-xs font-bold text-brand-blue mb-1">Floor No.</p>
+              <input
+                type="text"
+                name="floor"
+                value={auditForm.floor}
+                onChange={handleFormChange}
+                placeholder="Floor"
+                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-355 py-1"
+              />
+            </div>
+          </div>
+
+          {/* Row 6: Column + Flat */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Column Box */}
+            <div className="card p-3.5 flex flex-col justify-center">
+              <p className="text-xs font-bold text-brand-blue mb-1">Column No.</p>
+              <input
+                type="text"
+                name="columnNo"
+                value={auditForm.columnNo}
+                onChange={handleFormChange}
+                placeholder="Column"
+                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-355 py-1"
+              />
+            </div>
+            {/* Flat Box */}
+            <div className="card p-3.5 flex flex-col justify-center">
+              <p className="text-xs font-bold text-brand-blue mb-1">Flat No.</p>
+              <input
+                type="text"
+                name="flatNo"
+                value={auditForm.flatNo}
+                onChange={handleFormChange}
+                placeholder="Flat"
+                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-355 py-1"
+              />
+            </div>
+          </div>
+
+          {/* Row 7: Building + Pour */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Building Box */}
+            <div className="card p-3.5 flex flex-col justify-center">
+              <p className="text-xs font-bold text-brand-blue mb-1">Building Name/No.</p>
+              <input
+                type="text"
+                name="buildingName"
+                value={auditForm.buildingName}
+                onChange={handleFormChange}
+                placeholder="Building"
+                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-355 py-1"
+              />
+            </div>
+            {/* Pour Box */}
+            <div className="card p-3.5 flex flex-col justify-center">
+              <p className="text-xs font-bold text-brand-blue mb-1">Pour</p>
+              <input
+                type="text"
+                name="pour"
+                value={auditForm.pour}
+                onChange={handleFormChange}
+                placeholder="Pour no."
+                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-355 py-1"
+              />
+            </div>
+          </div>
+
+          {/* Row 8: Beam No Box */}
+          <div className="card p-3.5 flex flex-col justify-center">
+            <p className="text-xs font-bold text-brand-blue mb-1">Beam No.</p>
+            <input
+              type="text"
+              name="beamNo"
+              value={auditForm.beamNo}
+              onChange={handleFormChange}
+              placeholder="Enter beam number"
+              className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-355 py-1"
+            />
+          </div>
+        </div>
+
+        {/* Submit Button Container */}
+        <div className="mt-5 mb-8">
+          <Button
+            variant="primary"
+            className="w-full py-4 text-xs font-black tracking-widest uppercase shadow-md active:scale-95 text-brand-blue"
+            onClick={handleSubmitAudit}
+            loading={loading}
+          >
+            Submit Internal Audit
+          </Button>
         </div>
       </main>
     </div>
