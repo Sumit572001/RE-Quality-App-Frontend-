@@ -35,14 +35,11 @@ const Navbar = () => {
 
           {/* Centered Nyati Logo */}
           <div className="flex flex-col items-center justify-center">
-            <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="50" cy="50" r="45" fill="#1A3C6E" />
-              {/* Horizontal wave-like line details inside Nyati circle logo */}
-              <path d="M15 35 H85 M15 45 H85 M15 55 H85 M15 65 H85 M15 75 H85" stroke="#FFFFFF" strokeWidth="2.5" opacity="0.25" />
-              {/* White bold N letter */}
-              <text x="50" y="64" fill="#FFFFFF" fontSize="42" fontWeight="900" textAnchor="middle" fontFamily="Outfit, Inter, sans-serif">N</text>
-            </svg>
-            <span className="text-[10px] tracking-[0.2em] font-black text-brand-blue uppercase mt-1 leading-none">NYATI</span>
+            <img
+              src="https://nyatigroup.com/_next/image?url=%2Fimages%2Flogo%2Flogo.png&w=640&q=80"
+              alt="Nyati Group Logo"
+              className="h-9 object-contain"
+            />
           </div>
 
           {/* Spacer to keep logo centered */}
