@@ -146,11 +146,11 @@ const Home = () => {
       <main className="px-4 pt-4 pb-24 animate-fade-in">
         {/* Greeting Banner */}
         <div className="bg-gradient-orange rounded-2xl p-5 mb-5 shadow-card relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-20 h-20 bg-brand-blue/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-          <p className="text-brand-blue/70 text-xs font-semibold mb-1">Good {getGreeting()},</p>
-          <h2 className="text-brand-blue text-xl font-heading font-black mb-0.5">{user?.name || 'Welcome'}</h2>
-          <p className="text-brand-blue/70 text-xs font-semibold">{today}</p>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+          <p className="text-white/80 text-xs font-semibold mb-1">Good {getGreeting()},</p>
+          <h2 className="text-white text-xl font-heading font-black mb-0.5">{user?.name || 'Welcome'}</h2>
+          <p className="text-white/80 text-xs font-semibold">{today}</p>
         </div>
 
         {/* Page Heading */}
@@ -434,7 +434,7 @@ const Home = () => {
         <div className="mt-5 mb-8">
           <Button
             variant="primary"
-            className="w-full py-4 text-xs font-black tracking-widest uppercase shadow-md active:scale-95 text-brand-blue"
+            className="w-full py-4 text-xs font-black tracking-widest uppercase shadow-md active:scale-95 text-white"
             onClick={handleSubmitAudit}
             loading={loading}
           >

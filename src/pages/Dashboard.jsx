@@ -47,7 +47,7 @@ const NoIssueModal = ({ checklist, onClose, onSubmit, initialData }) => {
   };
 
   const SEVERITY_OPTIONS = [
-    { label: 'Mild (2/5)', color: 'text-[#4B5694]', border: 'border-[#4B5694]', bg: 'bg-[#4B5694]/10', dot: 'bg-[#4B5694]', bars: 1 },
+    { label: 'Mild (2/5)', color: 'text-[#1A56C8]', border: 'border-[#1A56C8]', bg: 'bg-[#1A56C8]/10', dot: 'bg-[#1A56C8]', bars: 1 },
     { label: 'Moderate (1/5)', color: 'text-yellow-600', border: 'border-yellow-500', bg: 'bg-yellow-50', dot: 'bg-yellow-500', bars: 2 },
     { label: 'Siver (0/5)', color: 'text-orange-600', border: 'border-orange-500', bg: 'bg-orange-50', dot: 'bg-orange-500', bars: 3 },
     { label: 'Fatal (0/5)', color: 'text-red-600', border: 'border-red-500', bg: 'bg-red-50', dot: 'bg-red-500', bars: 4 },
@@ -193,7 +193,7 @@ const NoIssueModal = ({ checklist, onClose, onSubmit, initialData }) => {
           <button
             onClick={handleSubmit}
             disabled={submitting || !severity}
-            className="w-full bg-brand-orange hover:bg-[#C4570A] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm uppercase mb-2"
+            className="w-full bg-brand-orange hover:bg-[#1040A8] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm uppercase mb-2"
           >
             {submitting ? (
               <>
@@ -359,7 +359,7 @@ const Dashboard = () => {
     const choice = checkedChecklists[checklistId]?.choice;
     if (choice === 'YES') {
       return (
-        <div className="w-8 h-8 rounded-lg border-2 border-[#4B5694] bg-[#4B5694] flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 rounded-lg border-2 border-[#1A56C8] bg-[#1A56C8] flex items-center justify-center flex-shrink-0">
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
           </svg>
@@ -491,10 +491,10 @@ const Dashboard = () => {
                                   onClick={() => handleSelectOption(checklist, 'YES')}
                                   className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl border-2 transition-all duration-200
                                     ${checkedChecklists[checklist._id]?.choice === 'YES'
-                                      ? 'border-[#4B5694] bg-[#4B5694]/10 text-[#4B5694] font-bold'
+                                      ? 'border-[#1A56C8] bg-[#1A56C8]/10 text-[#1A56C8] font-bold'
                                       : 'border-gray-200 hover:bg-gray-50 text-gray-500 bg-white'}`}
                                 >
-                                  <svg className="w-6 h-6 text-[#4B5694] mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-6 h-6 text-[#1A56C8] mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
                                   </svg>
                                   <span className="text-[11px] font-bold">YES</span>
@@ -533,7 +533,7 @@ const Dashboard = () => {
           <button
             onClick={handleSaveAndSubmit}
             disabled={submitting}
-            className="w-full bg-brand-orange hover:bg-[#C4570A] text-white font-bold py-3.5 px-6 rounded-xl shadow-md transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase"
+            className="w-full bg-brand-orange hover:bg-[#1040A8] text-white font-bold py-3.5 px-6 rounded-xl shadow-md transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase"
           >
             {submitting ? (
               <>

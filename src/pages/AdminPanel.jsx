@@ -356,7 +356,7 @@ const AdminPanel = () => {
   return (
     <div className="min-h-screen bg-[#F0F4F8] pb-12">
       {/* 1. TOP HEADER */}
-      <header className="bg-[#004282] px-6 py-3 flex items-center justify-between shadow-lg">
+      <header className="bg-[#1A56C8] px-6 py-3 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 border-2 border-white rounded flex items-center justify-center">
             <div className="w-3 h-3 bg-white rotate-45" />
@@ -379,7 +379,7 @@ const AdminPanel = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-6 py-4 text-[10px] font-bold transition-all border-b-4 ${activeTab === tab.id
-                ? 'border-[#004282] text-[#004282]'
+                ? 'border-[#1A56C8] text-[#1A56C8]'
                 : 'border-transparent text-gray-400 hover:text-gray-600'
                 }`}
             >
@@ -399,8 +399,8 @@ const AdminPanel = () => {
             {/* Add Form */}
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-6">
-                <div className="w-1.5 h-5 bg-[#E8690A] rounded-full" />
-                <h2 className="text-[#004282] font-black text-sm uppercase tracking-tight">ADD NEW CHECKLIST</h2>
+                <div className="w-1.5 h-5 bg-[#1A56C8] rounded-full" />
+                <h2 className="text-[#1A56C8] font-black text-sm uppercase tracking-tight">ADD NEW CHECKLIST</h2>
               </div>
 
               <form onSubmit={handleAddChecklistPoint} className="space-y-5">
@@ -457,7 +457,7 @@ const AdminPanel = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#004282] text-white font-black text-xs py-4 rounded-xl shadow-md hover:bg-blue-900 transition-all uppercase tracking-widest mt-2 active:scale-95 disabled:opacity-50"
+                  className="w-full bg-[#1A56C8] text-white font-black text-xs py-4 rounded-xl shadow-md hover:bg-[#1040A8] transition-all uppercase tracking-widest mt-2 active:scale-95 disabled:opacity-50"
                 >
                   {loading ? 'ADDING...' : 'ADD CHECKLIST POINT'}
                 </button>
@@ -467,8 +467,8 @@ const AdminPanel = () => {
             {/* List Section */}
             <section className="bg-white rounded-2xl p-0 shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 flex items-center justify-between border-b border-gray-50">
-                <h2 className="text-[#004282] font-bold text-sm uppercase">CURRENT CHECKLISTS</h2>
-                <div className="bg-[#EBF5FF] text-[#004282] text-[10px] font-black px-3 py-1.5 rounded-full border border-blue-100">
+                <h2 className="text-[#1A56C8] font-bold text-sm uppercase">CURRENT CHECKLISTS</h2>
+                <div className="bg-[#EBF3FF] text-[#1A56C8] text-[10px] font-black px-3 py-1.5 rounded-full border border-blue-100">
                   Total: {checklists.length || '0'}
                 </div>
               </div>
@@ -526,7 +526,7 @@ const AdminPanel = () => {
                           </div>
                         </div>
                         <div className="flex gap-2 justify-end mt-1">
-                          <button onClick={() => handleSaveChecklist(c._id)} className="bg-[#4B5694] hover:bg-[#353E73] text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
+                          <button onClick={() => handleSaveChecklist(c._id)} className="bg-[#1A56C8] hover:bg-[#1040A8] text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
                           <button onClick={() => setEditingChecklistId(null)} className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Cancel</button>
                         </div>
                       </div>
@@ -534,9 +534,9 @@ const AdminPanel = () => {
                       <>
                         <div className="flex-1 min-w-0 pr-4">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[9px] font-black text-[#E8690A] uppercase tracking-tighter">{getFormattedCategoryName(c.category)}</span>
+                            <span className="text-[9px] font-black text-[#1A56C8] uppercase tracking-tighter">{getFormattedCategoryName(c.category)}</span>
                             {c.subCategory && (
-                              <span className="text-[9px] font-black text-[#0051FF] uppercase tracking-tighter">{c.subCategory}</span>
+                              <span className="text-[9px] font-black text-[#1040A8] uppercase tracking-tighter">{c.subCategory}</span>
                             )}
                             {c.items && c.items[0] && c.items[0].mark !== undefined && (
                               <span className="text-[9px] font-black text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
@@ -576,8 +576,8 @@ const AdminPanel = () => {
           <div className="space-y-8 animate-fade-in">
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-6">
-                <div className="w-1.5 h-5 bg-[#E8690A] rounded-full" />
-                <h2 className="text-[#004282] font-black text-sm uppercase tracking-tight">ADD NEW CATEGORY</h2>
+                <div className="w-1.5 h-5 bg-[#1A56C8] rounded-full" />
+                <h2 className="text-[#1A56C8] font-black text-sm uppercase tracking-tight">ADD NEW CATEGORY</h2>
               </div>
               <form onSubmit={handleAddCategory} className="space-y-4">
                 <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2 px-1">CATEGORY NAME</label>
@@ -591,7 +591,7 @@ const AdminPanel = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#004282] text-white font-black text-xs py-4 rounded-xl shadow-md uppercase tracking-widest mt-2 disabled:opacity-50"
+                  className="w-full bg-[#1A56C8] text-white font-black text-xs py-4 rounded-xl shadow-md hover:bg-[#1040A8] transition-all uppercase tracking-widest mt-2 disabled:opacity-50"
                 >
                   {loading ? 'ADDING...' : 'ADD CATEGORY'}
                 </button>
@@ -600,8 +600,8 @@ const AdminPanel = () => {
 
             <section className="bg-white rounded-2xl p-0 shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 flex items-center justify-between border-b">
-                <h2 className="text-[#004282] font-bold text-sm uppercase">CURRENT CATEGORIES</h2>
-                <div className="bg-[#EBF5FF] text-[#004282] text-[10px] font-black px-3 py-1.5 rounded-full">
+                <h2 className="text-[#1A56C8] font-bold text-sm uppercase">CURRENT CATEGORIES</h2>
+                <div className="bg-[#EBF3FF] text-[#1A56C8] text-[10px] font-black px-3 py-1.5 rounded-full">
                   Total: {categories.length}
                 </div>
               </div>
@@ -616,7 +616,7 @@ const AdminPanel = () => {
                           onChange={(e) => setEditCategoryName(e.target.value)}
                           className="bg-[#f8fafc] border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none flex-1"
                         />
-                        <button onClick={() => handleSaveCategory(cat._id)} className="bg-[#4B5694] hover:bg-[#353E73] text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
+                        <button onClick={() => handleSaveCategory(cat._id)} className="bg-[#1A56C8] hover:bg-[#1040A8] text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
                         <button onClick={() => setEditingCategoryId(null)} className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Cancel</button>
                       </div>
                     ) : (
@@ -652,8 +652,8 @@ const AdminPanel = () => {
           <div className="space-y-8 animate-fade-in">
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-6">
-                <div className="w-1.5 h-5 bg-[#E8690A] rounded-full" />
-                <h2 className="text-[#004282] font-black text-sm uppercase tracking-tight">ADD NEW SUB-CATEGORY</h2>
+                <div className="w-1.5 h-5 bg-[#1A56C8] rounded-full" />
+                <h2 className="text-[#1A56C8] font-black text-sm uppercase tracking-tight">ADD NEW SUB-CATEGORY</h2>
               </div>
               <form onSubmit={handleAddSubCategory} className="space-y-5">
                 <div>
@@ -684,7 +684,7 @@ const AdminPanel = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#004282] text-white font-black text-xs py-4 rounded-xl shadow-md uppercase tracking-widest mt-2 disabled:opacity-50"
+                  className="w-full bg-[#1A56C8] text-white font-black text-xs py-4 rounded-xl shadow-md hover:bg-[#1040A8] transition-all uppercase tracking-widest mt-2 disabled:opacity-50"
                 >
                   {loading ? 'ADDING...' : 'ADD SUB-CATEGORY'}
                 </button>
@@ -693,8 +693,8 @@ const AdminPanel = () => {
 
             <section className="bg-white rounded-2xl p-0 shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 flex items-center justify-between border-b">
-                <h2 className="text-[#004282] font-bold text-sm uppercase">CURRENT SUB-CATEGORIES</h2>
-                <div className="bg-[#EBF5FF] text-[#004282] text-[10px] font-black px-3 py-1.5 rounded-full">
+                <h2 className="text-[#1A56C8] font-bold text-sm uppercase">CURRENT SUB-CATEGORIES</h2>
+                <div className="bg-[#EBF3FF] text-[#1A56C8] text-[10px] font-black px-3 py-1.5 rounded-full">
                   Total: {subCategories.length}
                 </div>
               </div>
@@ -720,7 +720,7 @@ const AdminPanel = () => {
                           className="bg-[#f8fafc] border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none flex-1"
                         />
                         <div className="flex gap-1">
-                          <button onClick={() => handleSaveSubCategory(sub._id)} className="bg-[#4B5694] hover:bg-[#353E73] text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
+                          <button onClick={() => handleSaveSubCategory(sub._id)} className="bg-[#1A56C8] hover:bg-[#1040A8] text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Save</button>
                           <button onClick={() => setEditingSubCategoryId(null)} className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1.5 rounded text-xs font-bold transition-all">Cancel</button>
                         </div>
                       </div>
@@ -728,7 +728,7 @@ const AdminPanel = () => {
                       <>
                         <div>
                           <span className="text-gray-800 font-bold text-sm">{sub.name}</span>
-                          <p className="text-[9px] text-[#E8690A] font-black uppercase tracking-tighter mt-0.5">
+                          <p className="text-[9px] text-[#1040A8] font-black uppercase tracking-tighter mt-0.5">
                             Category: {getFormattedCategoryName(sub.category?.name) || 'Unknown'}
                           </p>
                         </div>
