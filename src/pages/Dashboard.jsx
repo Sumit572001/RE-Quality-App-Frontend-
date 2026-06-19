@@ -8,10 +8,10 @@ import { getFormattedCategoryName } from '../utils/categoryHelper';
 /* ─────────────────────────────────────────────
    NO-Issue Modal — camera upload + severity
 ───────────────────────────────────────────── */
-const NoIssueModal = ({ checklist, onClose, onSubmit }) => {
+const NoIssueModal = ({ checklist, onClose, onSubmit, initialData }) => {
   const fileInputRef = useRef(null);
-  const [photos, setPhotos] = useState([]);
-  const [severity, setSeverity] = useState('');
+  const [photos, setPhotos] = useState(initialData?.photos || []);
+  const [severity, setSeverity] = useState(initialData?.severity || '');
   const [submitting, setSubmitting] = useState(false);
 
   const handleCameraClick = () => {
@@ -35,7 +35,7 @@ const NoIssueModal = ({ checklist, onClose, onSubmit }) => {
 
   const handleSubmit = () => {
     if (!severity) {
-      alert('Please select a severity level (Low, Medium, or High).');
+      alert('Please select a severity level.');
       return;
     }
     setSubmitting(true);
@@ -270,36 +270,78 @@ const Dashboard = () => {
 
   const totalSubCategoryMarks = filtered.reduce((sum, c) => sum + (c.items?.[0]?.mark || 0), 0);
 
+  const getChecklistMaxMarks = (checklistId) => {
+    const checklist = filtered.find((c) => c._id === checklistId);
+    return checklist?.items?.[0]?.mark !== undefined ? checklist.items[0].mark : 5;
+  };
+
+  const getMarksForSeverity = (severity) => {
+    if (!severity) return 0;
+    if (severity.includes('Mild')) return 2;
+    if (severity.includes('Moderate')) return 1;
+    if (severity.includes('Siver')) return 0;
+    if (severity.includes('Fatal')) return 0;
+    return 0;
+  };
+
+  // Derived scoring calculations
+  const actionedItems = Object.values(checkedChecklists).filter((item) => item && item.choice);
+  const achievedMarks = actionedItems.reduce((sum, item) => sum + (item.marks || 0), 0);
+  const totalActionedMaxMarks = Object.keys(checkedChecklists).reduce((sum, checklistId) => {
+    const item = checkedChecklists[checklistId];
+    if (item && item.choice) {
+      return sum + getChecklistMaxMarks(checklistId);
+    }
+    return sum;
+  }, 0);
+  const scorePercentage = totalSubCategoryMarks > 0
+    ? Math.round((achievedMarks / totalSubCategoryMarks) * 100)
+    : 0;
+
   const togglePopover = (checklistId) => {
     setActivePopoverId((prev) => (prev === checklistId ? null : checklistId));
   };
 
   const handleSelectOption = (checklist, option) => {
     if (option === 'NO') {
-      // Close the small popover and open the NO issue modal
       setActivePopoverId(null);
       setNoModalId(checklist._id);
       return;
     }
     // YES — toggle off if already selected
-    setCheckedChecklists((prev) => ({
-      ...prev,
-      [checklist._id]: prev[checklist._id] === option ? null : option,
-    }));
+    setCheckedChecklists((prev) => {
+      if (prev[checklist._id]?.choice === 'YES') {
+        const next = { ...prev };
+        delete next[checklist._id];
+        return next;
+      }
+      return {
+        ...prev,
+        [checklist._id]: {
+          choice: 'YES',
+          marks: checklist.items?.[0]?.mark !== undefined ? checklist.items[0].mark : 5,
+        },
+      };
+    });
     setActivePopoverId(null);
   };
 
   const handleNoModalSubmit = (checklistId, { photos, severity }) => {
+    const marks = getMarksForSeverity(severity);
     setCheckedChecklists((prev) => ({
       ...prev,
-      [checklistId]: 'NO',
+      [checklistId]: {
+        choice: 'NO',
+        severity,
+        photos,
+        marks,
+      },
     }));
-    // You can store photos & severity in state if needed for API submission
   };
 
   const handleSaveAndSubmit = () => {
     const uncheckedRequired = filtered.filter(
-      (c) => c.items?.[0]?.required && !checkedChecklists[c._id]
+      (c) => c.items?.[0]?.required && !checkedChecklists[c._id]?.choice
     );
     if (uncheckedRequired.length > 0) {
       alert(`Please respond to all required items:\n\n${uncheckedRequired.map(c => `• ${c.title}`).join('\n')}`);
@@ -314,7 +356,7 @@ const Dashboard = () => {
   };
 
   const renderCheckbox = (checklistId) => {
-    const choice = checkedChecklists[checklistId];
+    const choice = checkedChecklists[checklistId]?.choice;
     if (choice === 'YES') {
       return (
         <div className="w-8 h-8 rounded-lg border-2 border-[#4B5694] bg-[#4B5694] flex items-center justify-center flex-shrink-0">
@@ -375,7 +417,9 @@ const Dashboard = () => {
                 <div className="bg-brand-blue text-white font-heading font-bold text-center py-4 px-4 text-sm uppercase tracking-wider flex justify-center items-center gap-2">
                   <span>{activeSubCategory || 'Audit Checklist'}</span>
                   <span className="bg-white/20 px-2 py-0.5 rounded text-xs font-black">
-                    {totalSubCategoryMarks} Marks
+                    {totalActionedMaxMarks > 0
+                      ? `${achievedMarks}/${totalSubCategoryMarks} Marks (${scorePercentage}%)`
+                      : `${totalSubCategoryMarks} Marks`}
                   </span>
                 </div>
 
@@ -402,11 +446,31 @@ const Dashboard = () => {
                               {checklist.items?.[0]?.required && (
                                 <span className="text-red-500 font-bold" title="Required">*</span>
                               )}
-                              {checklist.items?.[0]?.mark !== undefined && (
-                                <span className="text-[10px] font-bold text-brand-orange bg-brand-orange/10 px-2 py-0.5 rounded-full whitespace-nowrap">
-                                  {checklist.items[0].mark} Marks
-                                </span>
-                              )}
+                              {(() => {
+                                const maxMark = checklist.items?.[0]?.mark !== undefined ? checklist.items[0].mark : 5;
+                                const state = checkedChecklists[checklist._id];
+                                if (!state) {
+                                  return (
+                                    <span className="text-[10px] font-bold text-brand-orange bg-brand-orange/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                      {maxMark} Marks
+                                    </span>
+                                  );
+                                }
+                                if (state.choice === 'YES') {
+                                  return (
+                                    <span className="text-[10px] font-bold text-green-700 bg-green-100 px-2.5 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1.5">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                      {state.marks}/{maxMark} Marks (Pass)
+                                    </span>
+                                  );
+                                }
+                                return (
+                                  <span className="text-[10px] font-bold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                    {state.marks}/{maxMark} Marks (Fail - {state.severity?.split(' ')[0]})
+                                  </span>
+                                );
+                              })()}
                             </span>
                             {renderCheckbox(checklist._id)}
                           </div>
@@ -426,7 +490,7 @@ const Dashboard = () => {
                                 <button
                                   onClick={() => handleSelectOption(checklist, 'YES')}
                                   className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl border-2 transition-all duration-200
-                                    ${checkedChecklists[checklist._id] === 'YES'
+                                    ${checkedChecklists[checklist._id]?.choice === 'YES'
                                       ? 'border-[#4B5694] bg-[#4B5694]/10 text-[#4B5694] font-bold'
                                       : 'border-gray-200 hover:bg-gray-50 text-gray-500 bg-white'}`}
                                 >
@@ -440,7 +504,7 @@ const Dashboard = () => {
                                 <button
                                   onClick={() => handleSelectOption(checklist, 'NO')}
                                   className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl border-2 transition-all duration-200
-                                    ${checkedChecklists[checklist._id] === 'NO'
+                                    ${checkedChecklists[checklist._id]?.choice === 'NO'
                                       ? 'border-red-500 bg-red-50 text-red-700 font-bold'
                                       : 'border-gray-200 hover:bg-gray-50 text-gray-500 bg-white'}`}
                                 >
@@ -494,6 +558,7 @@ const Dashboard = () => {
           checklist={noModalChecklist}
           onClose={() => setNoModalId(null)}
           onSubmit={(data) => handleNoModalSubmit(noModalId, data)}
+          initialData={checkedChecklists[noModalId]}
         />
       )}
     </div>
