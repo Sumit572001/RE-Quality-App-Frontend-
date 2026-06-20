@@ -9,6 +9,9 @@ import Input from '../components/ui/Input';
 import Badge from '../components/ui/Badge';
 import { CardSkeleton } from '../components/ui/Skeleton';
 import { getFormattedCategoryName, sortCategories } from '../utils/categoryHelper';
+import OfflineBanner from '../components/OfflineBanner';
+import { syncPendingAudits } from '../utils/syncService';
+import useOnlineStatus from '../hooks/useOnlineStatus';
 
 const STAGE_OPTIONS = ['Pre Work', 'Pour Card', 'During Work', 'After Work', 'General'];
 
@@ -49,6 +52,7 @@ const SITE_NAMES = [
 
 const Home = () => {
   const { user, isAdmin } = useAuth();
+  const isOnline = useOnlineStatus();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -81,6 +85,12 @@ const Home = () => {
       navigate('/admin');
     }
     fetchCategories();
+    // Auto-sync any pending offline audits on app load
+    if (navigator.onLine) {
+      syncPendingAudits().then(result => {
+        if (result.synced > 0) console.log(`✅ Synced ${result.synced} pending audit(s) on startup`);
+      });
+    }
   }, [user]);
 
   const fetchCategories = async () => {
@@ -141,6 +151,7 @@ const Home = () => {
 
   return (
     <div className="page-container bg-brand-gray">
+      <OfflineBanner />
       <Navbar />
 
       <main className="px-4 pt-4 pb-24 animate-fade-in">

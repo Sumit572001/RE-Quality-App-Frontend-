@@ -34,6 +34,7 @@ module.exports = {
         'slide-up': 'slideUp 0.4s ease-out',
         'scale-in': 'scaleIn 0.3s ease-out',
         'pulse-soft': 'pulseSoft 2s infinite',
+        'spin-slow': 'spin 2s linear infinite',
       },
       keyframes: {
         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },

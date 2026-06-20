@@ -94,16 +94,15 @@ const SelectSubCategory = () => {
           </button>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-heading font-bold text-brand-blue">Sub-Category</h1>
+              <h1 className="text-xl font-heading font-bold text-brand-blue">
+                {selectedCategory ? getFormattedCategoryName(selectedCategory.name) : 'Sub-Category'}
+              </h1>
               {!loading && (
                 <span className="badge-orange text-[10px] font-bold">
                   {filteredSubCategories.length} available
                 </span>
               )}
             </div>
-            {selectedCategory && (
-              <p className="text-xs text-gray-500 mt-0.5">Stage of Audit: <span className="font-bold text-brand-orange">{getFormattedCategoryName(selectedCategory.name)}</span></p>
-            )}
           </div>
         </div>
 

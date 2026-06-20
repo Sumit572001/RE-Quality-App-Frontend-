@@ -60,22 +60,13 @@ const Navbar = () => {
               </div>
               <div className="p-2">
                 {!isAdmin && (
-                  <>
-                    <Link
-                      to="/"
-                      onClick={() => setShowMenu(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm text-gray-700 font-medium transition-colors"
-                    >
-                      <HomeIcon className="w-4 h-4 text-brand-orange" /> Home
-                    </Link>
-                    <Link
-                      to="/dashboard"
-                      onClick={() => setShowMenu(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm text-gray-700 font-medium transition-colors"
-                    >
-                      <ListIcon className="w-4 h-4 text-brand-orange" /> Checklists
-                    </Link>
-                  </>
+                  <Link
+                    to="/"
+                    onClick={() => setShowMenu(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm text-gray-700 font-medium transition-colors"
+                  >
+                    <HomeIcon className="w-4 h-4 text-brand-orange" /> Home
+                  </Link>
                 )}
                 {isAdmin && (
                   <Link

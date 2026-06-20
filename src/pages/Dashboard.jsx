@@ -1,7 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getChecklists } from '../api/checklists';
+import { cacheAPIResponse, getCachedAPIResponse, savePendingAudit } from '../utils/offlineDB';
+import { submitAuditSubmission } from '../api/auditSubmissions';
+import { syncPendingAudits } from '../utils/syncService';
+import useOnlineStatus from '../hooks/useOnlineStatus';
+import OfflineBanner from '../components/OfflineBanner';
 import Navbar from '../components/Navbar';
 import { getFormattedCategoryName } from '../utils/categoryHelper';
 
@@ -221,6 +226,7 @@ const NoIssueModal = ({ checklist, onClose, onSubmit, initialData }) => {
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isOnline = useOnlineStatus();
   const [checklists, setChecklists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('');
@@ -247,13 +253,36 @@ const Dashboard = () => {
     setLoading(true);
     try {
       const res = await getChecklists();
-      setChecklists(res.data.data);
+      const data = res.data.data;
+      setChecklists(data);
+      // Cache for offline use
+      await cacheAPIResponse('checklists', data);
     } catch (err) {
       console.error('Failed to fetch checklists:', err);
+      // Fallback to cached data when offline
+      const cached = await getCachedAPIResponse('checklists');
+      if (cached) {
+        setChecklists(cached);
+        console.log('📦 Loaded checklists from offline cache');
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  // Auto-sync when coming back online
+  const handleSyncComplete = useCallback(async () => {
+    const result = await syncPendingAudits();
+    if (result.synced > 0) {
+      console.log(`✅ Auto-synced ${result.synced} audit(s)`);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOnline) {
+      syncPendingAudits();
+    }
+  }, [isOnline]);
 
   const filtered = checklists.filter((c) => {
     const matchCat = !activeCategory || c.category === activeCategory;
@@ -339,7 +368,7 @@ const Dashboard = () => {
     }));
   };
 
-  const handleSaveAndSubmit = () => {
+  const handleSaveAndSubmit = async () => {
     const uncheckedRequired = filtered.filter(
       (c) => c.items?.[0]?.required && !checkedChecklists[c._id]?.choice
     );
@@ -347,12 +376,67 @@ const Dashboard = () => {
       alert(`Please respond to all required items:\n\n${uncheckedRequired.map(c => `• ${c.title}`).join('\n')}`);
       return;
     }
+
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+
+    // Build audit payload
+    const auditForm = JSON.parse(localStorage.getItem('auditForm') || '{}');
+    const answers = Object.entries(checkedChecklists).map(([checklistId, item]) => {
+      const checklist = filtered.find(c => c._id === checklistId);
+      return {
+        checklistId,
+        title: checklist?.title || '',
+        choice: item.choice,
+        marks: item.marks || 0,
+        maxMarks: checklist?.items?.[0]?.mark || 0,
+        severity: item.severity || '',
+        photos: (item.photos || []).map(p => p.name || ''),
+      };
+    });
+
+    const auditPayload = {
+      localId: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      siteName: auditForm.siteName || '',
+      auditorName: auditForm.auditorName || '',
+      auditeeName: auditForm.auditeeName || '',
+      date: auditForm.date || new Date().toISOString().split('T')[0],
+      category: activeCategory,
+      subCategory: activeSubCategory,
+      location: auditForm.location || '',
+      floor: auditForm.floor || '',
+      columnNo: auditForm.columnNo || '',
+      flatNo: auditForm.flatNo || '',
+      buildingName: auditForm.buildingName || '',
+      pour: auditForm.pour || '',
+      beamNo: auditForm.beamNo || '',
+      answers,
+      totalMarks: totalSubCategoryMarks,
+      achievedMarks,
+      scorePercentage,
+      submittedAt: new Date().toISOString(),
+    };
+
+    try {
+      if (isOnline) {
+        // Online: submit directly to server
+        await submitAuditSubmission(auditPayload);
+        console.log('✅ Audit submitted online');
+      } else {
+        // Offline: save to IndexedDB queue
+        await savePendingAudit(auditPayload);
+        console.log('💾 Audit saved offline — will sync when online');
+      }
       localStorage.removeItem('auditForm');
-      navigate('/success');
-    }, 1000);
+      navigate('/success', { state: { offline: !isOnline } });
+    } catch (err) {
+      console.error('Submit failed, saving offline:', err);
+      // Fallback: save offline even if online submit fails
+      await savePendingAudit(auditPayload);
+      localStorage.removeItem('auditForm');
+      navigate('/success', { state: { offline: true } });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const renderCheckbox = (checklistId) => {
@@ -383,6 +467,7 @@ const Dashboard = () => {
 
   return (
     <div className="page-container bg-brand-gray pb-24 relative">
+      <OfflineBanner onSyncComplete={handleSyncComplete} />
       <Navbar />
 
       <main className="px-4 pt-4 pb-28 animate-fade-in">
@@ -530,22 +615,38 @@ const Dashboard = () => {
       {/* Sticky Submit Button */}
       {!loading && filtered.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-gray-150 z-40 max-w-md mx-auto shadow-lg">
+          {/* Offline indicator above button */}
+          {!isOnline && (
+            <div className="flex items-center gap-1.5 mb-2 px-1">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <p className="text-[10px] text-gray-500 font-semibold">
+                Offline — audit will be saved locally &amp; synced later
+              </p>
+            </div>
+          )}
           <button
             onClick={handleSaveAndSubmit}
             disabled={submitting}
-            className="w-full bg-brand-orange hover:bg-[#1040A8] text-white font-bold py-3.5 px-6 rounded-xl shadow-md transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase"
+            className={`w-full text-white font-bold py-3.5 px-6 rounded-xl shadow-md transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 text-sm uppercase
+              ${isOnline ? 'bg-brand-orange hover:bg-[#1040A8]' : 'bg-gray-700 hover:bg-gray-800'}`}
           >
             {submitting ? (
               <>
                 <div className="spinner border-white w-4 h-4" />
-                <span>Submitting...</span>
+                <span>{isOnline ? 'Submitting...' : 'Saving offline...'}</span>
               </>
             ) : (
               <>
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Submit</span>
+                {isOnline ? (
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                )}
+                <span>{isOnline ? 'Submit Audit' : 'Save Offline'}</span>
               </>
             )}
           </button>
