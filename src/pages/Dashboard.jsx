@@ -54,7 +54,7 @@ const CustomCamera = ({ onSave, onClose, onFallback }) => {
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL('image/jpeg');
       setCapturedImage(dataUrl);
-      
+
       // Stop stream tracks on freeze
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
