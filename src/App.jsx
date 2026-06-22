@@ -10,6 +10,7 @@ import SelectSubCategory from './pages/SelectSubCategory';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import Success from './pages/Success';
+import NextPage from './pages/NextPage';
 
 function App() {
   return (
@@ -50,6 +51,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Success />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/next"
+            element={
+              <ProtectedRoute>
+                <NextPage />
               </ProtectedRoute>
             }
           />

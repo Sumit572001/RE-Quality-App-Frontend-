@@ -8,3 +8,4 @@ export const getSubCategories = (category = '') => {
 export const createSubCategory = (data) => API.post('/subcategories', data);
 export const updateSubCategory = (id, data) => API.put(`/subcategories/${id}`, data);
 export const deleteSubCategory = (id) => API.delete(`/subcategories/${id}`);
+export const lockSubCategoriesByCategory = (categoryId) => API.put(`/subcategories/lock-by-category/${categoryId}`);

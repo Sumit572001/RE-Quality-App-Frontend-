@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getCategories } from '../api/categories';
-import { getSubCategories } from '../api/subcategories';
+import { getSubCategories, lockSubCategoriesByCategory } from '../api/subcategories';
 import { getChecklists } from '../api/checklists';
 import Navbar from '../components/Navbar';
 import { getFormattedCategoryName } from '../utils/categoryHelper';
@@ -15,6 +15,10 @@ const SelectSubCategory = () => {
   const [checklists, setChecklists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [submittingLock, setSubmittingLock] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+  const [toastType, setToastType] = useState('success');
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -76,6 +80,32 @@ const SelectSubCategory = () => {
     return matchingChecklists.reduce((sum, c) => sum + (c.items?.[0]?.mark || 0), 0);
   };
 
+  const showToast = (message, type = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
+
+  const handleLockCategory = async () => {
+    if (!selectedCategory) return;
+    try {
+      setSubmittingLock(true);
+      await lockSubCategoriesByCategory(selectedCategory._id);
+      showToast('Checklist closed and locked successfully!', 'success');
+      await fetchData();
+    } catch (err) {
+      console.error(err);
+      showToast(err.response?.data?.message || 'Failed to lock checklist', 'error');
+    } finally {
+      setSubmittingLock(false);
+      setShowConfirmModal(false);
+    }
+  };
+
+  const isAlreadyLocked = filteredSubCategories.length > 0 && filteredSubCategories.every(sub => sub.isLocked);
+
   return (
     <div className="page-container bg-brand-gray pb-10">
       <Navbar />
@@ -127,38 +157,168 @@ const SelectSubCategory = () => {
                   {filteredSubCategories.map((sub) => (
                     <div
                       key={sub._id}
-                      onClick={() => navigate(`/dashboard?category=${encodeURIComponent(selectedCategory.name)}&subCategory=${encodeURIComponent(sub.name)}`)}
-                      className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 hover:border-brand-orange hover:shadow-sm cursor-pointer transition-all duration-200 group"
+                      onClick={() => {
+                        if (sub.isLocked) {
+                          showToast('This sub-category checklist is locked.', 'error');
+                          return;
+                        }
+                        navigate(`/dashboard?category=${encodeURIComponent(selectedCategory.name)}&subCategory=${encodeURIComponent(sub.name)}`);
+                      }}
+                      className={`flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 transition-all duration-200 group ${
+                        sub.isLocked
+                          ? 'opacity-60 cursor-not-allowed bg-gray-50'
+                          : 'hover:border-brand-orange hover:shadow-sm cursor-pointer'
+                      }`}
                     >
                       <div className="flex items-center justify-between flex-1 pr-2 min-w-0">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 bg-brand-orange/10 rounded-xl flex items-center justify-center text-brand-orange group-hover:bg-brand-orange group-hover:text-white transition-colors duration-200 flex-shrink-0">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                            </svg>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-200 flex-shrink-0 ${
+                            sub.isLocked
+                              ? 'bg-gray-200 text-gray-400'
+                              : 'bg-brand-orange/10 text-brand-orange group-hover:bg-brand-orange group-hover:text-white'
+                          }`}>
+                            {sub.isLocked ? (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                              </svg>
+                            )}
                           </div>
-                          <span className="text-xs font-bold text-gray-700 leading-tight group-hover:text-brand-orange transition-colors truncate">
+                          <span className={`text-xs font-bold leading-tight transition-colors truncate ${
+                            sub.isLocked
+                              ? 'text-gray-400'
+                              : 'text-gray-700 group-hover:text-brand-orange'
+                          }`}>
                             {sub.name}
                           </span>
                         </div>
-                        <span className="text-[10px] font-black text-brand-orange bg-brand-orange/10 px-2.5 py-1 rounded-full whitespace-nowrap border border-brand-orange/20 flex-shrink-0">
+                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-full whitespace-nowrap border flex-shrink-0 ${
+                          sub.isLocked
+                            ? 'text-gray-400 bg-gray-100 border-gray-200'
+                            : 'text-brand-orange bg-brand-orange/10 border-brand-orange/20'
+                        }`}>
                           {getSubCategoryTotalMarks(sub.name)} Marks
                         </span>
                       </div>
-                      <svg
-                        className="w-4 h-4 text-gray-300 group-hover:text-brand-orange transition-colors"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                      </svg>
+                      {sub.isLocked ? (
+                        <svg
+                          className="w-4 h-4 text-red-400 flex-shrink-0"
+                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-4 h-4 text-gray-300 group-hover:text-brand-orange transition-colors flex-shrink-0"
+                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                        </svg>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
             </div>
+
+            {/* Action Buttons */}
+            {filteredSubCategories.length > 0 && (
+              <div className="pt-6 flex gap-4">
+                <button
+                  type="button"
+                  disabled={isAlreadyLocked || submittingLock}
+                  onClick={() => setShowConfirmModal(true)}
+                  className={`flex-1 py-3.5 px-6 rounded-xl font-bold text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${
+                    isAlreadyLocked
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
+                      : 'bg-brand-orange text-white hover:bg-brand-orangeDark active:scale-95'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {isAlreadyLocked ? 'Submitted' : 'Submit'}
+                </button>
+                
+                <button
+                  type="button"
+                  disabled={!isAlreadyLocked}
+                  onClick={() => navigate('/next')}
+                  className={`flex-1 py-3.5 px-6 rounded-xl font-bold text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${
+                    !isAlreadyLocked
+                      ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed shadow-none'
+                      : 'bg-brand-blue text-white hover:bg-brand-blueDark active:scale-95'
+                  }`}
+                >
+                  Next
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="modal-overlay px-4">
+          <div className="modal-sheet animate-scale-in max-w-sm rounded-3xl mx-auto mb-auto mt-24 p-6 flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            
+            <h3 className="text-lg font-heading font-bold text-brand-blue mb-2">
+              Close Checklist
+            </h3>
+            <p className="text-xs text-gray-500 mb-6 leading-relaxed">
+              Do you want to Close this checklist? Once closed, you will not be able to edit or reopen it.
+            </p>
+            
+            <div className="flex gap-3 w-full">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-150 text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleLockCategory}
+                disabled={submittingLock}
+                className="flex-1 py-2.5 px-4 bg-brand-orange hover:bg-brand-orangeDark text-white font-semibold rounded-xl shadow-sm transition-all duration-150 text-xs flex items-center justify-center gap-1.5"
+              >
+                {submittingLock ? (
+                  <span className="spinner border-white w-3 h-3"></span>
+                ) : 'Ok'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`toast ${toastType === 'success' ? 'toast-success' : 'toast-error'}`}>
+          {toastType === 'success' ? (
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )}
+          <span className="text-xs font-semibold">{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 };

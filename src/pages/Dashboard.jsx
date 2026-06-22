@@ -11,25 +11,208 @@ import Navbar from '../components/Navbar';
 import { getFormattedCategoryName } from '../utils/categoryHelper';
 
 /* ─────────────────────────────────────────────
-   NO-Issue Modal — camera upload + severity
+   Custom Camera Component
+   Direct stream capture, no gallery access
 ───────────────────────────────────────────── */
+const CustomCamera = ({ onSave, onClose, onFallback }) => {
+  const videoRef = useRef(null);
+  const [stream, setStream] = useState(null);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [error, setError] = useState(null);
+
+  const startCamera = async () => {
+    try {
+      setError(null);
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (err) {
+      console.error('Camera access error:', err);
+      setError('Could not access camera. Please check permissions.');
+    }
+  };
+
+  useEffect(() => {
+    startCamera();
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  const handleCapture = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth || 640;
+      canvas.height = videoRef.current.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      setCapturedImage(dataUrl);
+      
+      // Stop stream tracks on freeze
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    }
+  };
+
+  const handleRetake = () => {
+    setCapturedImage(null);
+    startCamera();
+  };
+
+  const handleSave = () => {
+    onSave(capturedImage);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black z-[100] flex flex-col justify-between max-w-md mx-auto">
+      {/* Top Header */}
+      <div className="flex items-center justify-between px-5 py-4 text-white bg-black/40 backdrop-blur-md">
+        <h4 className="font-heading font-bold text-sm">Capture Photo</h4>
+        <button
+          onClick={onClose}
+          className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Video / Captured Image Container */}
+      <div className="flex-1 flex items-center justify-center bg-black relative overflow-hidden">
+        {error ? (
+          <div className="text-center p-6">
+            <p className="text-sm text-red-400 mb-4">{error}</p>
+            <div className="flex flex-col gap-2.5 max-w-[200px] mx-auto">
+              <button
+                onClick={startCamera}
+                className="px-4 py-2.5 bg-white text-black font-semibold rounded-xl text-xs active:scale-95 transition-transform"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => {
+                  onClose();
+                  if (onFallback) onFallback();
+                }}
+                className="px-4 py-2.5 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-xl text-xs active:scale-95 transition-all"
+              >
+                Choose File instead
+              </button>
+            </div>
+          </div>
+        ) : capturedImage ? (
+          <img
+            src={capturedImage}
+            alt="Captured"
+            className="max-h-full max-w-full object-contain"
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
+
+      {/* Bottom Controls */}
+      <div className="py-8 px-6 bg-black/60 backdrop-blur-md flex justify-center items-center gap-8">
+        {capturedImage ? (
+          <>
+            <button
+              onClick={handleRetake}
+              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-colors active:scale-95"
+            >
+              Retake
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-sm transition-colors active:scale-95"
+            >
+              Save
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={handleCapture}
+            disabled={!!error}
+            className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center p-1 bg-transparent hover:scale-105 active:scale-95 transition-all"
+          >
+            <div className="w-full h-full rounded-full bg-red-600" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ─────────────────────────────────────────────
+   NO-Issue Modal — camera upload + severity
+   ───────────────────────────────────────────── */
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 const NoIssueModal = ({ checklist, onClose, onSubmit, initialData }) => {
   const fileInputRef = useRef(null);
   const [photos, setPhotos] = useState(initialData?.photos || []);
   const [severity, setSeverity] = useState(initialData?.severity || '');
   const [submitting, setSubmitting] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isLocationOpen, setIsLocationOpen] = useState(false);
+  const [building, setBuilding] = useState(initialData?.building || '');
+  const [unit, setUnit] = useState(initialData?.unit || '');
+  const [room, setRoom] = useState(initialData?.room || '');
 
   const handleCameraClick = () => {
-    if (fileInputRef.current) fileInputRef.current.click();
+    const isMobileDevice = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobileDevice) {
+      setIsCameraOpen(true);
+    } else {
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
+    }
   };
 
-  const handleFileChange = (e) => {
+  const handleCameraSave = (capturedBase64) => {
+    const newPhoto = {
+      url: capturedBase64,
+      name: `captured_${Date.now()}.jpg`,
+    };
+    setPhotos((prev) => [...prev, newPhoto]);
+    setIsCameraOpen(false);
+  };
+
+  const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
-    const newPhotos = files.map((file) => ({
-      file,
-      url: URL.createObjectURL(file),
-      name: file.name,
-    }));
+    const newPhotos = [];
+    for (const file of files) {
+      try {
+        const base64 = await fileToBase64(file);
+        newPhotos.push({
+          url: base64,
+          name: file.name,
+        });
+      } catch (err) {
+        console.error('Failed to read file:', err);
+      }
+    }
     setPhotos((prev) => [...prev, ...newPhotos]);
     e.target.value = '';
   };
@@ -39,13 +222,35 @@ const NoIssueModal = ({ checklist, onClose, onSubmit, initialData }) => {
   };
 
   const handleSubmit = () => {
+    if (photos.length === 0) {
+      alert('Please capture/upload at least one photo.');
+      return;
+    }
+    if (!building.trim()) {
+      alert('Please enter Building details.');
+      return;
+    }
+    if (!unit.trim()) {
+      alert('Please enter Unit details.');
+      return;
+    }
+    if (!room.trim()) {
+      alert('Please enter Room details.');
+      return;
+    }
     if (!severity) {
       alert('Please select a severity level.');
       return;
     }
     setSubmitting(true);
     setTimeout(() => {
-      onSubmit({ photos, severity });
+      onSubmit({
+        photos,
+        severity,
+        building: building.trim(),
+        unit: unit.trim(),
+        room: room.trim(),
+      });
       setSubmitting(false);
       onClose();
     }, 600);
@@ -94,12 +299,20 @@ const NoIssueModal = ({ checklist, onClose, onSubmit, initialData }) => {
         <div className="px-5 py-4 space-y-5">
           {/* ── Photo Upload Section ── */}
           <div>
-            <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">
-              📷 Upload Photos
-            </p>
+            <div className="flex justify-between items-center mb-3">
+              <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                📷 Capture Photo <span className="text-red-500 font-bold">*</span>
+              </p>
+              {photos.length > 0 && (
+                <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">
+                  {photos.length} Captured
+                </span>
+              )}
+            </div>
 
             {/* Camera Button */}
             <button
+              type="button"
               onClick={handleCameraClick}
               className="w-full border-2 border-dashed border-brand-orange/50 rounded-2xl py-6 flex flex-col items-center justify-center gap-2 bg-orange-50/30 hover:bg-orange-50 transition-colors active:scale-[0.98]"
             >
@@ -111,10 +324,10 @@ const NoIssueModal = ({ checklist, onClose, onSubmit, initialData }) => {
                 </svg>
               </div>
               <p className="text-sm font-bold text-brand-orange">Open Camera</p>
-              <p className="text-xs text-gray-400">Tap to capture photo</p>
+              <p className="text-xs text-gray-400">Tap to capture photo directly</p>
             </button>
 
-            {/* Hidden camera-only file input */}
+            {/* Hidden fallback file input */}
             <input
               ref={fileInputRef}
               type="file"
@@ -158,10 +371,86 @@ const NoIssueModal = ({ checklist, onClose, onSubmit, initialData }) => {
             )}
           </div>
 
+          {/* ── Location Accordion Section ── */}
+          <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+            <button
+              type="button"
+              onClick={() => setIsLocationOpen(!isLocationOpen)}
+              className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100/80 transition-colors focus:outline-none"
+            >
+              <span className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                📍 Location <span className="text-red-500 font-bold">*</span>
+              </span>
+              <div className="flex items-center gap-2">
+                {building.trim() || unit.trim() || room.trim() ? (
+                  <span className="text-[10px] bg-[#1A56C8]/10 text-[#1A56C8] px-2 py-0.5 rounded-full font-bold">
+                    Filled
+                  </span>
+                ) : (
+                  <span className="text-[10px] bg-red-50 text-red-500 px-2 py-0.5 rounded-full font-bold">
+                    Required
+                  </span>
+                )}
+                <svg
+                  className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isLocationOpen ? 'transform rotate-180' : ''}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </button>
+
+            {isLocationOpen && (
+              <div className="p-4 bg-white border-t border-gray-100 space-y-4 animate-fade-in text-left">
+                {/* Building Input */}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                    Building <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={building}
+                    onChange={(e) => setBuilding(e.target.value)}
+                    placeholder="Enter building details..."
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white focus:border-brand-orange focus:outline-none text-xs font-semibold text-gray-700 placeholder-gray-400"
+                  />
+                </div>
+
+                {/* Unit Input */}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                    Unit <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value)}
+                    placeholder="Enter unit details..."
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white focus:border-brand-orange focus:outline-none text-xs font-semibold text-gray-700 placeholder-gray-400"
+                  />
+                </div>
+
+                {/* Room Input */}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                    Room <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={room}
+                    onChange={(e) => setRoom(e.target.value)}
+                    placeholder="Enter room details..."
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white focus:border-brand-orange focus:outline-none text-xs font-semibold text-gray-700 placeholder-gray-400"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* ── Severity Section ── */}
           <div>
             <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">
-              ⚠️ Severity Level
+              ⚠️ Severity Level <span className="text-red-500 font-bold">*</span>
             </p>
             <div className="space-y-2.5">
               {SEVERITY_OPTIONS.map((opt) => (
@@ -197,7 +486,7 @@ const NoIssueModal = ({ checklist, onClose, onSubmit, initialData }) => {
           {/* ── Submit Button ── */}
           <button
             onClick={handleSubmit}
-            disabled={submitting || !severity}
+            disabled={submitting || !severity || photos.length === 0 || !building.trim() || !unit.trim() || !room.trim()}
             className="w-full bg-brand-orange hover:bg-[#1040A8] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm uppercase mb-2"
           >
             {submitting ? (
@@ -216,6 +505,15 @@ const NoIssueModal = ({ checklist, onClose, onSubmit, initialData }) => {
           </button>
         </div>
       </div>
+
+      {/* Custom Camera Overlay */}
+      {isCameraOpen && (
+        <CustomCamera
+          onSave={handleCameraSave}
+          onClose={() => setIsCameraOpen(false)}
+          onFallback={() => fileInputRef.current?.click()}
+        />
+      )}
     </>
   );
 };
@@ -355,7 +653,7 @@ const Dashboard = () => {
     setActivePopoverId(null);
   };
 
-  const handleNoModalSubmit = (checklistId, { photos, severity }) => {
+  const handleNoModalSubmit = (checklistId, { photos, severity, building, unit, room }) => {
     const marks = getMarksForSeverity(severity);
     setCheckedChecklists((prev) => ({
       ...prev,
@@ -364,6 +662,9 @@ const Dashboard = () => {
         severity,
         photos,
         marks,
+        building,
+        unit,
+        room,
       },
     }));
   };
@@ -390,7 +691,10 @@ const Dashboard = () => {
         marks: item.marks || 0,
         maxMarks: checklist?.items?.[0]?.mark || 0,
         severity: item.severity || '',
-        photos: (item.photos || []).map(p => p.name || ''),
+        photos: (item.photos || []).map(p => p.url || ''),
+        building: item.building || '',
+        unit: item.unit || '',
+        room: item.room || '',
       };
     });
 
