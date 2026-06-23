@@ -3,6 +3,7 @@
  */
 import { getPendingAudits, markAuditSynced } from './offlineDB';
 import { submitAuditSubmission } from '../api/auditSubmissions';
+import { submitDocumentAudit } from '../api/documentAudits';
 
 let isSyncing = false;
 
@@ -24,7 +25,11 @@ export const syncPendingAudits = async () => {
 
     for (const audit of pending) {
       try {
-        await submitAuditSubmission(audit);
+        if (audit.type === 'document-audit') {
+          await submitDocumentAudit(audit);
+        } else {
+          await submitAuditSubmission(audit);
+        }
         await markAuditSynced(audit.localId);
         synced++;
         console.log(`✅ Synced audit: ${audit.localId}`);

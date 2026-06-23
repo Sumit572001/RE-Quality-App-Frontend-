@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getChecklists } from '../api/checklists';
-import { cacheAPIResponse, getCachedAPIResponse, savePendingAudit } from '../utils/offlineDB';
-import { submitAuditSubmission } from '../api/auditSubmissions';
+import { cacheAPIResponse, getCachedAPIResponse, savePendingAudit, getPendingAudits } from '../utils/offlineDB';
+import { submitAuditSubmission, getAuditSubmissions } from '../api/auditSubmissions';
 import { syncPendingAudits } from '../utils/syncService';
 import useOnlineStatus from '../hooks/useOnlineStatus';
 import OfflineBanner from '../components/OfflineBanner';
@@ -534,6 +534,80 @@ const Dashboard = () => {
   const [activePopoverId, setActivePopoverId] = useState(null);
   // noModalId stores which checklist is showing the NO-issue modal
   const [noModalId, setNoModalId] = useState(null);
+  const [previousSubmissions, setPreviousSubmissions] = useState([]);
+
+  const fetchPreviousSubmissions = useCallback(async () => {
+    if (!activeCategory || !activeSubCategory) return;
+    try {
+      let offlineSubmissions = [];
+      try {
+        const pending = await getPendingAudits();
+        if (pending) {
+          offlineSubmissions = pending;
+        }
+      } catch (err) {
+        console.error('Failed to fetch offline pending audits:', err);
+      }
+
+      let onlineSubmissions = [];
+      if (isOnline) {
+        try {
+          const res = await getAuditSubmissions();
+          onlineSubmissions = res.data.data || [];
+          await cacheAPIResponse('audit-submissions', onlineSubmissions);
+        } catch (err) {
+          console.error('Failed to fetch online audit submissions:', err);
+        }
+      } else {
+        const cached = await getCachedAPIResponse('audit-submissions');
+        if (cached) {
+          onlineSubmissions = cached;
+        }
+      }
+
+      const allSubmissions = [...offlineSubmissions, ...onlineSubmissions];
+      
+      const currentForm = JSON.parse(localStorage.getItem('auditForm') || '{}');
+      const matching = allSubmissions.filter((sub) => {
+        return (
+          String(sub.siteName || '').trim().toLowerCase() === String(currentForm.siteName || '').trim().toLowerCase() &&
+          String(sub.category || '').trim().toLowerCase() === String(activeCategory || '').trim().toLowerCase() &&
+          String(sub.subCategory || '').trim().toLowerCase() === String(activeSubCategory || '').trim().toLowerCase() &&
+          String(sub.location || '').trim().toLowerCase() === String(currentForm.location || '').trim().toLowerCase() &&
+          String(sub.floor || '').trim().toLowerCase() === String(currentForm.floor || '').trim().toLowerCase() &&
+          String(sub.columnNo || '').trim().toLowerCase() === String(currentForm.columnNo || '').trim().toLowerCase() &&
+          String(sub.flatNo || '').trim().toLowerCase() === String(currentForm.flatNo || '').trim().toLowerCase() &&
+          String(sub.buildingName || '').trim().toLowerCase() === String(currentForm.buildingName || '').trim().toLowerCase() &&
+          String(sub.pour || '').trim().toLowerCase() === String(currentForm.pour || '').trim().toLowerCase() &&
+          String(sub.beamNo || '').trim().toLowerCase() === String(currentForm.beamNo || '').trim().toLowerCase()
+        );
+      });
+
+      setPreviousSubmissions(matching);
+    } catch (err) {
+      console.error('Failed to load previous submissions:', err);
+    }
+  }, [activeCategory, activeSubCategory, isOnline]);
+
+  useEffect(() => {
+    if (activeCategory && activeSubCategory) {
+      fetchPreviousSubmissions();
+    }
+  }, [activeCategory, activeSubCategory, isOnline, fetchPreviousSubmissions]);
+
+  const previouslySubmittedAnswers = useMemo(() => {
+    const map = {};
+    previousSubmissions.forEach((sub) => {
+      if (sub.answers && Array.isArray(sub.answers)) {
+        sub.answers.forEach((ans) => {
+          if (ans.checklistId && ans.choice) {
+            map[ans.checklistId] = ans;
+          }
+        });
+      }
+    });
+    return map;
+  }, [previousSubmissions]);
 
   useEffect(() => {
     if (user?.role === 'admin') navigate('/admin');
@@ -612,32 +686,43 @@ const Dashboard = () => {
   };
 
   // Derived scoring calculations
-  const actionedItems = Object.values(checkedChecklists).filter((item) => item && item.choice);
+  const allActionedItems = useMemo(() => {
+    const combined = {};
+    Object.entries(previouslySubmittedAnswers).forEach(([id, val]) => {
+      combined[id] = val;
+    });
+    Object.entries(checkedChecklists).forEach(([id, val]) => {
+      if (val && val.choice) {
+        combined[id] = val;
+      }
+    });
+    return combined;
+  }, [previouslySubmittedAnswers, checkedChecklists]);
+
+  const actionedItems = Object.values(allActionedItems);
   const achievedMarks = actionedItems.reduce((sum, item) => sum + (item.marks || 0), 0);
-  const totalActionedMaxMarks = Object.keys(checkedChecklists).reduce((sum, checklistId) => {
-    const item = checkedChecklists[checklistId];
-    if (item && item.choice) {
-      return sum + getChecklistMaxMarks(checklistId);
-    }
-    return sum;
+  const totalActionedMaxMarks = Object.keys(allActionedItems).reduce((sum, checklistId) => {
+    return sum + getChecklistMaxMarks(checklistId);
   }, 0);
   const scorePercentage = totalSubCategoryMarks > 0
     ? Math.round((achievedMarks / totalSubCategoryMarks) * 100)
     : 0;
 
   const togglePopover = (checklistId) => {
+    if (previouslySubmittedAnswers[checklistId]) return;
     setActivePopoverId((prev) => (prev === checklistId ? null : checklistId));
   };
 
   const handleSelectOption = (checklist, option) => {
+    if (previouslySubmittedAnswers[checklist._id]) return;
     if (option === 'NO') {
       setActivePopoverId(null);
       setNoModalId(checklist._id);
       return;
     }
-    // YES — toggle off if already selected
+    // YES or N/A — toggle off if already selected
     setCheckedChecklists((prev) => {
-      if (prev[checklist._id]?.choice === 'YES') {
+      if (prev[checklist._id]?.choice === option) {
         const next = { ...prev };
         delete next[checklist._id];
         return next;
@@ -645,7 +730,7 @@ const Dashboard = () => {
       return {
         ...prev,
         [checklist._id]: {
-          choice: 'YES',
+          choice: option,
           marks: checklist.items?.[0]?.mark !== undefined ? checklist.items[0].mark : 5,
         },
       };
@@ -670,11 +755,8 @@ const Dashboard = () => {
   };
 
   const handleSaveAndSubmit = async () => {
-    const uncheckedRequired = filtered.filter(
-      (c) => c.items?.[0]?.required && !checkedChecklists[c._id]?.choice
-    );
-    if (uncheckedRequired.length > 0) {
-      alert(`Please respond to all required items:\n\n${uncheckedRequired.map(c => `• ${c.title}`).join('\n')}`);
+    if (Object.keys(checkedChecklists).length === 0) {
+      alert("Please select YES or NO on at least one checkpoint before submitting.");
       return;
     }
 
@@ -730,24 +812,50 @@ const Dashboard = () => {
         await savePendingAudit(auditPayload);
         console.log('💾 Audit saved offline — will sync when online');
       }
-      localStorage.removeItem('auditForm');
-      navigate('/success', { state: { offline: !isOnline } });
+      navigate('/success', { state: { offline: !isOnline, category: activeCategory } });
     } catch (err) {
       console.error('Submit failed, saving offline:', err);
       // Fallback: save offline even if online submit fails
       await savePendingAudit(auditPayload);
-      localStorage.removeItem('auditForm');
-      navigate('/success', { state: { offline: true } });
+      navigate('/success', { state: { offline: true, category: activeCategory } });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const renderCheckbox = (checklistId) => {
+  const renderCheckbox = (checklistId, isPreviouslySubmitted, submittedAnswer) => {
+    if (isPreviouslySubmitted && submittedAnswer) {
+      if (submittedAnswer.choice === 'YES') {
+        return (
+          <div className="w-8 h-8 rounded-lg border-2 border-green-200 bg-green-100 flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        );
+      } else if (submittedAnswer.choice === 'N/A') {
+        return (
+          <div className="w-8 h-8 rounded-lg border-2 border-orange-200 bg-orange-100 flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M20 12H4" />
+            </svg>
+          </div>
+        );
+      } else {
+        return (
+          <div className="w-8 h-8 rounded-lg border-2 border-red-200 bg-red-100 flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+        );
+      }
+    }
+
     const choice = checkedChecklists[checklistId]?.choice;
     if (choice === 'YES') {
       return (
-        <div className="w-8 h-8 rounded-lg border-2 border-[#1A56C8] bg-[#1A56C8] flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 rounded-lg border-2 border-green-500 bg-green-500 flex items-center justify-center flex-shrink-0">
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
           </svg>
@@ -759,6 +867,15 @@ const Dashboard = () => {
         <div className="w-8 h-8 rounded-lg border-2 border-red-500 bg-red-500 flex items-center justify-center flex-shrink-0">
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+      );
+    }
+    if (choice === 'N/A') {
+      return (
+        <div className="w-8 h-8 rounded-lg border-2 border-orange-500 bg-orange-500 flex items-center justify-center flex-shrink-0">
+          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M20 12H4" />
           </svg>
         </div>
       );
@@ -822,46 +939,70 @@ const Dashboard = () => {
                   <div className="space-y-3 mt-4">
                     {stageChecklists.map((checklist) => {
                       const isSelected = !!checkedChecklists[checklist._id];
+                      const submittedAnswer = previouslySubmittedAnswers[checklist._id];
+                      const isPreviouslySubmitted = !!submittedAnswer;
                       return (
                         <div key={checklist._id} className="relative">
                           {/* Item Card */}
                           <div
                             onClick={() => togglePopover(checklist._id)}
-                            className={`flex items-center justify-between p-4 bg-white rounded-2xl border cursor-pointer transition-all duration-200 select-none shadow-sm hover:shadow-md
-                              ${isSelected ? 'border-brand-orange/30' : 'border-gray-200/80 hover:border-brand-orange/30'}`}
+                            className={`flex items-center justify-between p-4 rounded-2xl border select-none shadow-sm transition-all duration-200
+                              ${isPreviouslySubmitted 
+                                ? 'bg-gray-50/70 border-gray-200 opacity-85 cursor-not-allowed pointer-events-none' 
+                                : isSelected 
+                                  ? 'bg-white border-brand-orange/30 cursor-pointer hover:shadow-md' 
+                                  : 'bg-white border-gray-200/80 hover:border-brand-orange/30 cursor-pointer hover:shadow-md'
+                              }`}
                           >
-                            <span className={`text-xs font-bold leading-relaxed flex-1 pr-4 transition-colors ${isSelected ? 'text-gray-500' : 'text-gray-800'} flex items-center flex-wrap gap-1.5`}>
-                              <span>{checklist.title}</span>
-                              {checklist.items?.[0]?.required && (
-                                <span className="text-red-500 font-bold" title="Required">*</span>
-                              )}
-                              {(() => {
-                                const maxMark = checklist.items?.[0]?.mark !== undefined ? checklist.items[0].mark : 5;
-                                const state = checkedChecklists[checklist._id];
-                                if (!state) {
+                            <div className="flex-1 pr-4 text-left">
+                              <span className={`text-xs font-bold leading-relaxed transition-colors flex items-center flex-wrap gap-1.5
+                                ${isPreviouslySubmitted
+                                  ? 'text-gray-400 font-semibold'
+                                  : isSelected 
+                                    ? 'text-gray-500' 
+                                    : 'text-gray-800'
+                                }`}
+                              >
+                                <span>{checklist.title}</span>
+                                {!isPreviouslySubmitted && checklist.items?.[0]?.required && (
+                                  <span className="text-red-500 font-bold" title="Required">*</span>
+                                )}
+                                {!isPreviouslySubmitted && (() => {
+                                  const maxMark = checklist.items?.[0]?.mark !== undefined ? checklist.items[0].mark : 5;
+                                  const state = checkedChecklists[checklist._id];
+                                  if (!state) {
+                                    return (
+                                      <span className="text-[10px] font-bold text-brand-orange bg-brand-orange/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                        {maxMark} Marks
+                                      </span>
+                                    );
+                                  }
+                                  if (state.choice === 'YES') {
+                                    return (
+                                      <span className="text-[10px] font-bold text-green-700 bg-green-100 px-2.5 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                        {state.marks}/{maxMark} Marks (Pass)
+                                      </span>
+                                    );
+                                  }
+                                  if (state.choice === 'N/A') {
+                                    return (
+                                      <span className="text-[10px] font-bold text-orange-700 bg-orange-100 px-2.5 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                                        {state.marks}/{maxMark} Marks (N/A)
+                                      </span>
+                                    );
+                                  }
                                   return (
-                                    <span className="text-[10px] font-bold text-brand-orange bg-brand-orange/10 px-2 py-0.5 rounded-full whitespace-nowrap">
-                                      {maxMark} Marks
+                                    <span className="text-[10px] font-bold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1.5">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                                      {state.marks}/{maxMark} Marks (Fail - {state.severity?.split(' ')[0]})
                                     </span>
                                   );
-                                }
-                                if (state.choice === 'YES') {
-                                  return (
-                                    <span className="text-[10px] font-bold text-green-700 bg-green-100 px-2.5 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1.5">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                      {state.marks}/{maxMark} Marks (Pass)
-                                    </span>
-                                  );
-                                }
-                                return (
-                                  <span className="text-[10px] font-bold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1.5">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                                    {state.marks}/{maxMark} Marks (Fail - {state.severity?.split(' ')[0]})
-                                  </span>
-                                );
-                              })()}
-                            </span>
-                            {renderCheckbox(checklist._id)}
+                                })()}
+                              </span>
+                            </div>
+                            {renderCheckbox(checklist._id, isPreviouslySubmitted, submittedAnswer)}
                           </div>
 
                           {/* YES / NO Popover */}
@@ -880,10 +1021,10 @@ const Dashboard = () => {
                                   onClick={() => handleSelectOption(checklist, 'YES')}
                                   className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl border-2 transition-all duration-200
                                     ${checkedChecklists[checklist._id]?.choice === 'YES'
-                                      ? 'border-[#1A56C8] bg-[#1A56C8]/10 text-[#1A56C8] font-bold'
+                                      ? 'border-green-500 bg-green-50 text-green-700 font-bold'
                                       : 'border-gray-200 hover:bg-gray-50 text-gray-500 bg-white'}`}
                                 >
-                                  <svg className="w-6 h-6 text-[#1A56C8] mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className={`w-6 h-6 mb-0.5 ${checkedChecklists[checklist._id]?.choice === 'YES' ? 'text-green-600' : 'text-green-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
                                   </svg>
                                   <span className="text-[11px] font-bold">YES</span>
@@ -901,6 +1042,20 @@ const Dashboard = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M6 18L18 6M6 6l12 12" />
                                   </svg>
                                   <span className="text-[11px] font-bold">NO</span>
+                                </button>
+
+                                {/* N/A */}
+                                <button
+                                  onClick={() => handleSelectOption(checklist, 'N/A')}
+                                  className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl border-2 transition-all duration-200
+                                    ${checkedChecklists[checklist._id]?.choice === 'N/A'
+                                      ? 'border-orange-500 bg-orange-50 text-orange-700 font-bold'
+                                      : 'border-gray-200 hover:bg-gray-50 text-gray-500 bg-white'}`}
+                                >
+                                  <svg className={`w-6 h-6 mb-0.5 ${checkedChecklists[checklist._id]?.choice === 'N/A' ? 'text-orange-600' : 'text-orange-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M20 12H4" />
+                                  </svg>
+                                  <span className="text-[11px] font-bold">N/A</span>
                                 </button>
                               </div>
                             </>

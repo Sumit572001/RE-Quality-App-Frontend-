@@ -93,6 +93,25 @@ const Home = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    const saved = localStorage.getItem('auditForm');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setAuditForm(prev => ({
+          ...prev,
+          ...parsed,
+          date: parsed.date || new Date().toISOString().split('T')[0]
+        }));
+        if (parsed.category) {
+          setSelectedCategory(parsed.category);
+        }
+      } catch (err) {
+        console.error('Failed to parse auditForm from localStorage:', err);
+      }
+    }
+  }, []);
+
   const fetchCategories = async () => {
     try {
       const res = await getCategories();

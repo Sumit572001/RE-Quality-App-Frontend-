@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getCategories } from '../api/categories';
@@ -6,10 +6,14 @@ import { getSubCategories, lockSubCategoriesByCategory } from '../api/subcategor
 import { getChecklists } from '../api/checklists';
 import Navbar from '../components/Navbar';
 import { getFormattedCategoryName } from '../utils/categoryHelper';
+import useOnlineStatus from '../hooks/useOnlineStatus';
+import { getPendingAudits, getCachedAPIResponse, cacheAPIResponse } from '../utils/offlineDB';
+import { getAuditSubmissions } from '../api/auditSubmissions';
 
 const SelectSubCategory = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isOnline = useOnlineStatus();
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
   const [checklists, setChecklists] = useState([]);
@@ -19,6 +23,7 @@ const SelectSubCategory = () => {
   const [submittingLock, setSubmittingLock] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const [toastType, setToastType] = useState('success');
+  const [previousSubmissions, setPreviousSubmissions] = useState([]);
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -78,6 +83,90 @@ const SelectSubCategory = () => {
       (c) => c.category === selectedCategory.name && c.subCategory === subName
     );
     return matchingChecklists.reduce((sum, c) => sum + (c.items?.[0]?.mark || 0), 0);
+  };
+
+  const fetchPreviousSubmissions = useCallback(async () => {
+    if (!selectedCategory) return;
+    try {
+      let offlineSubmissions = [];
+      try {
+        const pending = await getPendingAudits();
+        if (pending) {
+          offlineSubmissions = pending;
+        }
+      } catch (err) {
+        console.error('Failed to fetch offline pending audits:', err);
+      }
+
+      let onlineSubmissions = [];
+      if (isOnline) {
+        try {
+          const res = await getAuditSubmissions();
+          onlineSubmissions = res.data.data || [];
+          await cacheAPIResponse('audit-submissions', onlineSubmissions);
+        } catch (err) {
+          console.error('Failed to fetch online audit submissions:', err);
+        }
+      } else {
+        const cached = await getCachedAPIResponse('audit-submissions');
+        if (cached) {
+          onlineSubmissions = cached;
+        }
+      }
+
+      const allSubmissions = [...offlineSubmissions, ...onlineSubmissions];
+
+      const currentForm = JSON.parse(localStorage.getItem('auditForm') || '{}');
+      const matching = allSubmissions.filter((sub) => {
+        return (
+          String(sub.siteName || '').trim().toLowerCase() === String(currentForm.siteName || '').trim().toLowerCase() &&
+          String(sub.category || '').trim().toLowerCase() === String(selectedCategory.name || '').trim().toLowerCase() &&
+          String(sub.location || '').trim().toLowerCase() === String(currentForm.location || '').trim().toLowerCase() &&
+          String(sub.floor || '').trim().toLowerCase() === String(currentForm.floor || '').trim().toLowerCase() &&
+          String(sub.columnNo || '').trim().toLowerCase() === String(currentForm.columnNo || '').trim().toLowerCase() &&
+          String(sub.flatNo || '').trim().toLowerCase() === String(currentForm.flatNo || '').trim().toLowerCase() &&
+          String(sub.buildingName || '').trim().toLowerCase() === String(currentForm.buildingName || '').trim().toLowerCase() &&
+          String(sub.pour || '').trim().toLowerCase() === String(currentForm.pour || '').trim().toLowerCase() &&
+          String(sub.beamNo || '').trim().toLowerCase() === String(currentForm.beamNo || '').trim().toLowerCase()
+        );
+      });
+
+      setPreviousSubmissions(matching);
+    } catch (err) {
+      console.error('Failed to load previous submissions in subcategory screen:', err);
+    }
+  }, [selectedCategory, isOnline]);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      fetchPreviousSubmissions();
+    }
+  }, [selectedCategory, isOnline, fetchPreviousSubmissions]);
+
+  const getSubCategoryProgress = (subName) => {
+    if (!selectedCategory) return { achievedMarks: 0, totalMarks: 0, scorePercentage: 0 };
+
+    const subChecklists = checklists.filter(
+      (c) => c.category === selectedCategory.name && c.subCategory === subName
+    );
+    const totalMarks = subChecklists.reduce((sum, c) => sum + (c.items?.[0]?.mark || 0), 0);
+
+    // Get unique answered checklists in the submissions matching this subCategory
+    const uniqueAnswers = {};
+    previousSubmissions.forEach((submission) => {
+      if (submission.subCategory === subName && submission.answers && Array.isArray(submission.answers)) {
+        submission.answers.forEach((ans) => {
+          if (ans.checklistId && ans.choice) {
+            uniqueAnswers[ans.checklistId] = ans;
+          }
+        });
+      }
+    });
+
+    const achievedMarks = Object.values(uniqueAnswers).reduce((sum, ans) => sum + (ans.marks || 0), 0);
+    const scorePercentage = totalMarks > 0 ? Math.round((achievedMarks / totalMarks) * 100) : 0;
+
+    return { achievedMarks, totalMarks, scorePercentage };
   };
 
   const showToast = (message, type = 'success') => {
@@ -164,19 +253,17 @@ const SelectSubCategory = () => {
                         }
                         navigate(`/dashboard?category=${encodeURIComponent(selectedCategory.name)}&subCategory=${encodeURIComponent(sub.name)}`);
                       }}
-                      className={`flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 transition-all duration-200 group ${
-                        sub.isLocked
+                      className={`flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 transition-all duration-200 group ${sub.isLocked
                           ? 'opacity-60 cursor-not-allowed bg-gray-50'
                           : 'hover:border-brand-orange hover:shadow-sm cursor-pointer'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between flex-1 pr-2 min-w-0">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-200 flex-shrink-0 ${
-                            sub.isLocked
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-200 flex-shrink-0 ${sub.isLocked
                               ? 'bg-gray-200 text-gray-400'
                               : 'bg-brand-orange/10 text-brand-orange group-hover:bg-brand-orange group-hover:text-white'
-                          }`}>
+                            }`}>
                             {sub.isLocked ? (
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -187,21 +274,27 @@ const SelectSubCategory = () => {
                               </svg>
                             )}
                           </div>
-                          <span className={`text-xs font-bold leading-tight transition-colors truncate ${
-                            sub.isLocked
+                          <span className={`text-xs font-bold leading-tight transition-colors truncate ${sub.isLocked
                               ? 'text-gray-400'
                               : 'text-gray-700 group-hover:text-brand-orange'
-                          }`}>
+                            }`}>
                             {sub.name}
                           </span>
                         </div>
-                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-full whitespace-nowrap border flex-shrink-0 ${
-                          sub.isLocked
-                            ? 'text-gray-400 bg-gray-100 border-gray-200'
-                            : 'text-brand-orange bg-brand-orange/10 border-brand-orange/20'
-                        }`}>
-                          {getSubCategoryTotalMarks(sub.name)} Marks
-                        </span>
+                        {(() => {
+                          const progress = getSubCategoryProgress(sub.name);
+                          return (
+                            <span className={`text-[10px] font-black px-2.5 py-1 rounded-full whitespace-nowrap border flex-shrink-0 ${sub.isLocked
+                                ? 'text-gray-400 bg-gray-100 border-gray-200'
+                                : 'text-brand-orange bg-brand-orange/10 border-brand-orange/20'
+                              }`}>
+                              {progress.achievedMarks > 0
+                                ? `${progress.achievedMarks}/${progress.totalMarks} Marks (${progress.scorePercentage}%)`
+                                : `${progress.totalMarks} Marks`
+                              }
+                            </span>
+                          );
+                        })()}
                       </div>
                       {sub.isLocked ? (
                         <svg
@@ -231,27 +324,25 @@ const SelectSubCategory = () => {
                   type="button"
                   disabled={isAlreadyLocked || submittingLock}
                   onClick={() => setShowConfirmModal(true)}
-                  className={`flex-1 py-3.5 px-6 rounded-xl font-bold text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${
-                    isAlreadyLocked
+                  className={`flex-1 py-3.5 px-6 rounded-xl font-bold text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${isAlreadyLocked
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
                       : 'bg-brand-orange text-white hover:bg-brand-orangeDark active:scale-95'
-                  }`}
+                    }`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                   {isAlreadyLocked ? 'Submitted' : 'Submit'}
                 </button>
-                
+
                 <button
                   type="button"
                   disabled={!isAlreadyLocked}
                   onClick={() => navigate('/next')}
-                  className={`flex-1 py-3.5 px-6 rounded-xl font-bold text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${
-                    !isAlreadyLocked
+                  className={`flex-1 py-3.5 px-6 rounded-xl font-bold text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${!isAlreadyLocked
                       ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed shadow-none'
                       : 'bg-brand-blue text-white hover:bg-brand-blueDark active:scale-95'
-                  }`}
+                    }`}
                 >
                   Next
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,14 +364,14 @@ const SelectSubCategory = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            
+
             <h3 className="text-lg font-heading font-bold text-brand-blue mb-2">
               Close Checklist
             </h3>
             <p className="text-xs text-gray-500 mb-6 leading-relaxed">
-              Do you want to Close this checklist? Once closed, you will not be able to edit or reopen it.
+              Do you want to Submit this checklist? Once Submited, you will not be able to edit or reopen it.
             </p>
-            
+
             <div className="flex gap-3 w-full">
               <button
                 type="button"

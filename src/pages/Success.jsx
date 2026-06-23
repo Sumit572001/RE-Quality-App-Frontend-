@@ -1,10 +1,23 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import Button from '../components/ui/Button';
+import React, { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const SuccessPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isOffline = location.state?.offline === true;
+  const category = location.state?.category;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (category) {
+        navigate(`/select-subcategory?category=${encodeURIComponent(category)}`);
+      } else {
+        navigate('/select-subcategory');
+      }
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [category, navigate]);
 
   return (
     <div className="page-container bg-white flex flex-col items-center justify-center px-6 text-center">
@@ -32,7 +45,7 @@ const SuccessPage = () => {
             The audit has been saved to your device.
           </p>
           {/* Offline notice card */}
-          <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-8 text-left">
+          <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 text-left">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,24 +69,11 @@ const SuccessPage = () => {
           <h1 className="text-2xl font-heading font-bold text-brand-blue mb-2">
             Audit Submitted!
           </h1>
-          <p className="text-gray-500 mb-8">
-            The quality checklist has been successfully saved to the database.
+          <p className="text-gray-500 mb-6 animate-fade-in">
+            The quality checklist has been successfully submitted.
           </p>
         </>
       )}
-
-      <div className="w-full space-y-3">
-        <Link to="/">
-          <Button variant="primary" className="w-full">
-            Back to Home
-          </Button>
-        </Link>
-        <Link to="/select-subcategory">
-          <Button variant="outline" className="w-full">
-            New Audit
-          </Button>
-        </Link>
-      </div>
     </div>
   );
 };
