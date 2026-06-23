@@ -254,15 +254,15 @@ const SelectSubCategory = () => {
                         navigate(`/dashboard?category=${encodeURIComponent(selectedCategory.name)}&subCategory=${encodeURIComponent(sub.name)}`);
                       }}
                       className={`flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 transition-all duration-200 group ${sub.isLocked
-                          ? 'opacity-60 cursor-not-allowed bg-gray-50'
-                          : 'hover:border-brand-orange hover:shadow-sm cursor-pointer'
+                        ? 'opacity-60 cursor-not-allowed bg-gray-50'
+                        : 'hover:border-brand-orange hover:shadow-sm cursor-pointer'
                         }`}
                     >
                       <div className="flex items-center justify-between flex-1 pr-2 min-w-0">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-200 flex-shrink-0 ${sub.isLocked
-                              ? 'bg-gray-200 text-gray-400'
-                              : 'bg-brand-orange/10 text-brand-orange group-hover:bg-brand-orange group-hover:text-white'
+                            ? 'bg-gray-200 text-gray-400'
+                            : 'bg-brand-orange/10 text-brand-orange group-hover:bg-brand-orange group-hover:text-white'
                             }`}>
                             {sub.isLocked ? (
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,8 +275,8 @@ const SelectSubCategory = () => {
                             )}
                           </div>
                           <span className={`text-xs font-bold leading-tight transition-colors truncate ${sub.isLocked
-                              ? 'text-gray-400'
-                              : 'text-gray-700 group-hover:text-brand-orange'
+                            ? 'text-gray-400'
+                            : 'text-gray-700 group-hover:text-brand-orange'
                             }`}>
                             {sub.name}
                           </span>
@@ -285,8 +285,8 @@ const SelectSubCategory = () => {
                           const progress = getSubCategoryProgress(sub.name);
                           return (
                             <span className={`text-[10px] font-black px-2.5 py-1 rounded-full whitespace-nowrap border flex-shrink-0 ${sub.isLocked
-                                ? 'text-gray-400 bg-gray-100 border-gray-200'
-                                : 'text-brand-orange bg-brand-orange/10 border-brand-orange/20'
+                              ? 'text-gray-400 bg-gray-100 border-gray-200'
+                              : 'text-brand-orange bg-brand-orange/10 border-brand-orange/20'
                               }`}>
                               {progress.achievedMarks > 0
                                 ? `${progress.achievedMarks}/${progress.totalMarks} Marks (${progress.scorePercentage}%)`
@@ -325,8 +325,8 @@ const SelectSubCategory = () => {
                   disabled={isAlreadyLocked || submittingLock}
                   onClick={() => setShowConfirmModal(true)}
                   className={`flex-1 py-3.5 px-6 rounded-xl font-bold text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${isAlreadyLocked
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
-                      : 'bg-brand-orange text-white hover:bg-brand-orangeDark active:scale-95'
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
+                    : 'bg-brand-orange text-white hover:bg-brand-orangeDark active:scale-95'
                     }`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -340,8 +340,8 @@ const SelectSubCategory = () => {
                   disabled={!isAlreadyLocked}
                   onClick={() => navigate('/next')}
                   className={`flex-1 py-3.5 px-6 rounded-xl font-bold text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${!isAlreadyLocked
-                      ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed shadow-none'
-                      : 'bg-brand-blue text-white hover:bg-brand-blueDark active:scale-95'
+                    ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed shadow-none'
+                    : 'bg-brand-blue text-white hover:bg-brand-blueDark active:scale-95'
                     }`}
                 >
                   Next

@@ -566,7 +566,7 @@ const Dashboard = () => {
       }
 
       const allSubmissions = [...offlineSubmissions, ...onlineSubmissions];
-      
+
       const currentForm = JSON.parse(localStorage.getItem('auditForm') || '{}');
       const matching = allSubmissions.filter((sub) => {
         return (
@@ -947,10 +947,10 @@ const Dashboard = () => {
                           <div
                             onClick={() => togglePopover(checklist._id)}
                             className={`flex items-center justify-between p-4 rounded-2xl border select-none shadow-sm transition-all duration-200
-                              ${isPreviouslySubmitted 
-                                ? 'bg-gray-50/70 border-gray-200 opacity-85 cursor-not-allowed pointer-events-none' 
-                                : isSelected 
-                                  ? 'bg-white border-brand-orange/30 cursor-pointer hover:shadow-md' 
+                              ${isPreviouslySubmitted
+                                ? 'bg-gray-50/70 border-gray-200 opacity-85 cursor-not-allowed pointer-events-none'
+                                : isSelected
+                                  ? 'bg-white border-brand-orange/30 cursor-pointer hover:shadow-md'
                                   : 'bg-white border-gray-200/80 hover:border-brand-orange/30 cursor-pointer hover:shadow-md'
                               }`}
                           >
@@ -958,8 +958,8 @@ const Dashboard = () => {
                               <span className={`text-xs font-bold leading-relaxed transition-colors flex items-center flex-wrap gap-1.5
                                 ${isPreviouslySubmitted
                                   ? 'text-gray-400 font-semibold'
-                                  : isSelected 
-                                    ? 'text-gray-500' 
+                                  : isSelected
+                                    ? 'text-gray-500'
                                     : 'text-gray-800'
                                 }`}
                               >
