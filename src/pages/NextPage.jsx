@@ -37,12 +37,21 @@ const NextPage = () => {
     date: '',
   });
 
-  const [answers, setAnswers] = useState(
-    ITEMS_DATA.reduce((acc, item) => {
-      acc[item.srNo] = { status: '', remark: '' };
-      return acc;
-    }, {})
-  );
+  const [answers, setAnswers] = useState(() => {
+    const initial = {};
+    ITEMS_DATA.forEach(item => {
+      if (!item.details || item.details.trim() === '') {
+        initial[`${item.srNo}_0`] = { status: '', remark: '' };
+      } else {
+        item.details.split('\n').forEach((_, index) => {
+          initial[`${item.srNo}_${index}`] = { status: '', remark: '' };
+        });
+      }
+    });
+    return initial;
+  });
+
+  const [activeRemarkModal, setActiveRemarkModal] = useState(null); // { key: string, label: string, remark: string }
 
   useEffect(() => {
     const saved = localStorage.getItem('auditForm');
@@ -53,7 +62,8 @@ const NextPage = () => {
           ...prev,
           siteName: parsed.siteName || '',
           auditorName: parsed.auditorName || '',
-          date: parsed.date || new Date().toISOString().split('T')[0],
+          siteQA: parsed.auditeeName || '',
+          date: parsed.date || '',
         }));
       } catch (err) {
         console.error('Failed to parse auditForm in NextPage:', err);
@@ -61,39 +71,59 @@ const NextPage = () => {
     }
   }, []);
 
-  const handleStatusChange = (srNo, value) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [srNo]: {
-        ...prev[srNo],
-        status: prev[srNo].status === value ? '' : value,
-      },
-    }));
-  };
+  const handleStatusChange = (key, value, label) => {
+    setAnswers((prev) => {
+      const current = prev[key] || { status: '', remark: '' };
+      const nextStatus = current.status === value ? '' : value;
 
-  const handleRemarkChange = (srNo, value) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [srNo]: {
-        ...prev[srNo],
-        remark: value,
-      },
-    }));
+      if (nextStatus === 'NO') {
+        setTimeout(() => {
+          setActiveRemarkModal({ key, label, remark: current.remark || '' });
+        }, 50);
+      }
+
+      return {
+        ...prev,
+        [key]: {
+          ...current,
+          status: nextStatus,
+        },
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
 
-    const answersPayload = ITEMS_DATA.map((item) => ({
-      srNo: item.srNo,
-      documentType: item.documentType,
-      description: item.description,
-      details: item.details,
-      fileCode: item.fileCode,
-      status: answers[item.srNo].status,
-      remark: answers[item.srNo].remark,
-    }));
+    const answersPayload = [];
+    ITEMS_DATA.forEach((item) => {
+      if (!item.details || item.details.trim() === '') {
+        const key = `${item.srNo}_0`;
+        answersPayload.push({
+          srNo: item.srNo,
+          documentType: item.documentType,
+          description: item.description,
+          details: '',
+          fileCode: item.fileCode || '',
+          status: answers[key]?.status || '',
+          remark: answers[key]?.remark || '',
+        });
+      } else {
+        item.details.split('\n').forEach((line, index) => {
+          const key = `${item.srNo}_${index}`;
+          answersPayload.push({
+            srNo: item.srNo,
+            documentType: item.documentType,
+            description: item.description,
+            details: line.trim(),
+            fileCode: item.fileCode || '',
+            status: answers[key]?.status || '',
+            remark: answers[key]?.remark || '',
+          });
+        });
+      }
+    });
 
     const auditPayload = {
       type: 'document-audit',
@@ -165,7 +195,7 @@ const NextPage = () => {
               </div>
               <div>
                 <p className="text-xs font-bold text-brand-blue">{meta.siteName || 'Site Name'}</p>
-                <p className="text-[10px] text-gray-400 font-semibold">Date: {meta.date}</p>
+                <p className="text-[10px] text-gray-400 font-semibold">Date &amp; Time: {meta.date ? meta.date.replace('T', ' ') : ''}</p>
               </div>
             </div>
 
@@ -181,13 +211,13 @@ const NextPage = () => {
 
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
-                  Name of Site QA
+                  Name of Site Auditee
                 </label>
                 <input
                   type="text"
                   value={meta.siteQA}
                   onChange={(e) => setMeta({ ...meta, siteQA: e.target.value })}
-                  placeholder="Enter Name of Site QA"
+                  placeholder="Enter Name of Site Auditee"
                   className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-orange focus:outline-none text-xs font-semibold text-gray-700 placeholder-gray-400 bg-white"
                 />
               </div>
@@ -208,82 +238,99 @@ const NextPage = () => {
               </div>
 
               <div className="space-y-3.5">
-                {group.list.map((item) => (
-                  <div key={item.srNo} className="bg-white rounded-2xl border border-gray-150 p-4 shadow-sm space-y-3">
-                    {/* Item Top row (badges) */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-md">
-                        SR NO: {item.srNo}
-                      </span>
-                      {item.fileCode && (
-                        <span className="text-[9px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 border border-gray-200 rounded-md">
-                          Code: {item.fileCode}
-                        </span>
-                      )}
-                    </div>
+                {(() => {
+                  const flatItems = [];
+                  group.list.forEach((item) => {
+                    if (!item.details || item.details.trim() === '') {
+                      flatItems.push({
+                        item,
+                        subKey: `${item.srNo}_0`,
+                        label: item.description,
+                        isSub: false,
+                        detailText: ''
+                      });
+                    } else {
+                      item.details.split('\n').forEach((line, index) => {
+                        flatItems.push({
+                          item,
+                          subKey: `${item.srNo}_${index}`,
+                          label: line.trim(),
+                          isSub: true,
+                          detailText: line.trim()
+                        });
+                      });
+                    }
+                  });
 
-                    {/* Descriptions */}
-                    <div>
-                      <h4 className="text-xs font-bold text-gray-800 leading-snug">
-                        {item.description}
-                      </h4>
-                      {item.details && (
-                        <div className="mt-1.5 bg-gray-50 border border-gray-100 rounded-xl p-2.5 space-y-1">
-                          {item.details.split('\n').map((det, index) => (
-                            <p key={index} className="text-[10px] text-gray-500 font-medium leading-relaxed flex items-start gap-1">
-                              <span>•</span>
-                              <span>{det}</span>
+                  return flatItems.map((flat) => {
+                    const { item, subKey, label, isSub, detailText } = flat;
+                    const currentAns = answers[subKey] || { status: '', remark: '' };
+                    return (
+                      <div key={subKey} className="bg-white rounded-2xl border border-gray-150 p-4 shadow-sm space-y-3 text-left">
+                        {/* Description & Detail */}
+                        <div className="space-y-1">
+                          <h4 className="text-xs font-bold text-gray-800 leading-snug">
+                            {item.description}
+                          </h4>
+                          {isSub && (
+                            <p className="text-xs font-semibold text-gray-500">
+                              {detailText}
                             </p>
-                          ))}
+                          )}
                         </div>
-                      )}
-                    </div>
 
-                    {/* YES / NO Choices & Remarks */}
-                    <div className="pt-2 border-t border-gray-100 flex flex-col gap-3">
-                      <div className="grid grid-cols-2 gap-2.5">
-                        {/* YES */}
-                        <button
-                          type="button"
-                          onClick={() => handleStatusChange(item.srNo, 'YES')}
-                          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 font-bold text-xs transition-all active:scale-[0.98]
-                            ${answers[item.srNo].status === 'YES'
-                              ? 'border-green-500 bg-green-50 text-green-700'
-                              : 'border-gray-200 text-gray-400 bg-white hover:border-gray-300'}`}
-                        >
-                          <svg className={`w-4 h-4 ${answers[item.srNo].status === 'YES' ? 'text-green-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                          YES
-                        </button>
+                        {/* YES / NO Choices & Remarks */}
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-2 gap-2.5">
+                            {/* YES */}
+                            <button
+                              type="button"
+                              onClick={() => handleStatusChange(subKey, 'YES', label)}
+                              className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-bold text-xs transition-all active:scale-[0.98]
+                                ${currentAns.status === 'YES'
+                                  ? 'border-green-500 bg-green-50 text-green-700 font-black'
+                                  : 'border-gray-200 text-gray-400 bg-white hover:border-gray-300'}`}
+                            >
+                              <svg className={`w-4 h-4 ${currentAns.status === 'YES' ? 'text-green-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
+                              </svg>
+                              YES
+                            </button>
 
-                        {/* NO */}
-                        <button
-                          type="button"
-                          onClick={() => handleStatusChange(item.srNo, 'NO')}
-                          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 font-bold text-xs transition-all active:scale-[0.98]
-                            ${answers[item.srNo].status === 'NO'
-                              ? 'border-red-500 bg-red-50 text-red-700'
-                              : 'border-gray-200 text-gray-400 bg-white hover:border-gray-300'}`}
-                        >
-                          <svg className={`w-4 h-4 ${answers[item.srNo].status === 'NO' ? 'text-red-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                          NO
-                        </button>
+                            {/* NO */}
+                            <button
+                              type="button"
+                              onClick={() => handleStatusChange(subKey, 'NO', label)}
+                              className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-bold text-xs transition-all active:scale-[0.98]
+                                ${currentAns.status === 'NO'
+                                  ? 'border-red-500 bg-red-50 text-red-700 font-black'
+                                  : 'border-gray-200 text-gray-400 bg-white hover:border-gray-300'}`}
+                            >
+                              <svg className={`w-4 h-4 ${currentAns.status === 'NO' ? 'text-red-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                              NO
+                            </button>
+                          </div>
+
+                          {currentAns.status === 'NO' && (
+                            <div
+                              onClick={() => setActiveRemarkModal({ key: subKey, label: label, remark: currentAns.remark || '' })}
+                              className="bg-red-50/50 border border-red-100 rounded-xl px-3 py-2 text-xs text-red-600 font-medium cursor-pointer hover:bg-red-100/50 transition-colors flex items-center justify-between"
+                            >
+                              <span className="truncate pr-2">
+                                <strong>Reason for NO:</strong> {currentAns.remark || <span className="italic text-red-400">Click to add comment...</span>}
+                              </span>
+                              <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
                       </div>
-
-                      {/* Remark text field */}
-                      <input
-                        type="text"
-                        value={answers[item.srNo].remark}
-                        onChange={(e) => handleRemarkChange(item.srNo, e.target.value)}
-                        placeholder="Add Remark / Comments..."
-                        className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:border-brand-orange focus:outline-none text-[11px] font-medium text-gray-700 placeholder-gray-350 bg-white"
-                      />
-                    </div>
-                  </div>
-                ))}
+                    );
+                  });
+                })()}
               </div>
             </div>
           ))}
@@ -319,6 +366,56 @@ const NextPage = () => {
           </div>
         </form>
       </main>
+      {/* Floating Remark Modal */}
+      {activeRemarkModal && (
+        <div className="modal-overlay px-4 z-50">
+          <div className="modal-sheet animate-scale-in max-w-sm rounded-3xl mx-auto mb-auto mt-24 p-6 flex flex-col">
+            <h3 className="text-sm font-heading font-black text-brand-blue mb-2 uppercase tracking-wide">
+              Add Reason for NO
+            </h3>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-3">
+              {activeRemarkModal.label}
+            </p>
+
+            <textarea
+              rows={4}
+              value={activeRemarkModal.remark}
+              onChange={(e) => setActiveRemarkModal({ ...activeRemarkModal, remark: e.target.value })}
+              placeholder="Type reason/remark here..."
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-orange focus:outline-none text-xs font-semibold text-gray-700 placeholder-gray-400 bg-white mb-5 resize-none"
+              autoFocus
+            />
+
+            <div className="flex gap-3 w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveRemarkModal(null);
+                }}
+                className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-all duration-150 text-xs focus:outline-none"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAnswers((prev) => ({
+                    ...prev,
+                    [activeRemarkModal.key]: {
+                      ...prev[activeRemarkModal.key],
+                      remark: activeRemarkModal.remark.trim(),
+                    },
+                  }));
+                  setActiveRemarkModal(null);
+                }}
+                className="flex-1 py-2.5 px-4 bg-brand-orange hover:bg-brand-orangeDark text-white font-bold rounded-xl shadow-sm transition-all duration-150 text-xs focus:outline-none"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

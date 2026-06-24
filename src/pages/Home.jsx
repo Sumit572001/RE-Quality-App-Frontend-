@@ -27,7 +27,8 @@ const AUDITOR_NAMES = [
   'Santosh Patil',
   'Rahul Mane',
   'Sujit Chopde',
-  'Subhash Bhandigare'
+  'Subhash Bhandigare',
+  'Hemant Pardeshi'
 ];
 
 const AUDITEE_NAMES = [
@@ -35,7 +36,8 @@ const AUDITEE_NAMES = [
   'Jaydeep Patil',
   'Sujit Shendkar',
   'Ashvin Pawar',
-  'Sagar Patil'
+  'Sagar Patil',
+  'Sumit Verma'
 ];
 
 const SITE_NAMES = [
@@ -59,11 +61,21 @@ const Home = () => {
   const [isAuditorDropdownOpen, setIsAuditorDropdownOpen] = useState(false);
   const [isAuditeeDropdownOpen, setIsAuditeeDropdownOpen] = useState(false);
   const [isSiteDropdownOpen, setIsSiteDropdownOpen] = useState(false);
+  const getLocalDateTimeString = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   const [auditForm, setAuditForm] = useState({
     siteName: '',
     auditorName: '',
     auditeeName: '',
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateTimeString(),
     stage: 'RCC',
     location: '',
     floor: '',
@@ -98,10 +110,17 @@ const Home = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        let loadedDate = parsed.date;
+        if (loadedDate && loadedDate.length === 10) {
+          const now = new Date();
+          const hours = String(now.getHours()).padStart(2, '0');
+          const minutes = String(now.getMinutes()).padStart(2, '0');
+          loadedDate = `${loadedDate}T${hours}:${minutes}`;
+        }
         setAuditForm(prev => ({
           ...prev,
           ...parsed,
-          date: parsed.date || new Date().toISOString().split('T')[0]
+          date: loadedDate || getLocalDateTimeString()
         }));
         if (parsed.category) {
           setSelectedCategory(parsed.category);
@@ -239,9 +258,9 @@ const Home = () => {
 
             {/* Date Box */}
             <div className="card p-3.5 flex flex-col justify-center">
-              <p className="text-xs font-bold text-brand-blue mb-1">Date</p>
+              <p className="text-xs font-bold text-brand-blue mb-1">Date & Time</p>
               <input
-                type="date"
+                type="datetime-local"
                 name="date"
                 value={auditForm.date}
                 onChange={handleFormChange}
@@ -390,35 +409,7 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Row 6: Column + Flat */}
-          <div className="grid grid-cols-2 gap-3">
-            {/* Column Box */}
-            <div className="card p-3.5 flex flex-col justify-center">
-              <p className="text-xs font-bold text-brand-blue mb-1">Column No.</p>
-              <input
-                type="text"
-                name="columnNo"
-                value={auditForm.columnNo}
-                onChange={handleFormChange}
-                placeholder="Column"
-                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-355 py-1"
-              />
-            </div>
-            {/* Flat Box */}
-            <div className="card p-3.5 flex flex-col justify-center">
-              <p className="text-xs font-bold text-brand-blue mb-1">Flat No.</p>
-              <input
-                type="text"
-                name="flatNo"
-                value={auditForm.flatNo}
-                onChange={handleFormChange}
-                placeholder="Flat"
-                className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-355 py-1"
-              />
-            </div>
-          </div>
-
-          {/* Row 7: Building + Pour */}
+          {/* Row 6: Building + Pour */}
           <div className="grid grid-cols-2 gap-3">
             {/* Building Box */}
             <div className="card p-3.5 flex flex-col justify-center">
@@ -446,15 +437,15 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Row 8: Beam No Box */}
+          {/* Row 7: Flat Box */}
           <div className="card p-3.5 flex flex-col justify-center">
-            <p className="text-xs font-bold text-brand-blue mb-1">Beam No.</p>
+            <p className="text-xs font-bold text-brand-blue mb-1">Flat No.</p>
             <input
               type="text"
-              name="beamNo"
-              value={auditForm.beamNo}
+              name="flatNo"
+              value={auditForm.flatNo}
               onChange={handleFormChange}
-              placeholder="Enter beam number"
+              placeholder="Flat"
               className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent placeholder-gray-355 py-1"
             />
           </div>

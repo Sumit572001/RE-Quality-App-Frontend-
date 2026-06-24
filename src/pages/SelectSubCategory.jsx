@@ -123,11 +123,9 @@ const SelectSubCategory = () => {
           String(sub.category || '').trim().toLowerCase() === String(selectedCategory.name || '').trim().toLowerCase() &&
           String(sub.location || '').trim().toLowerCase() === String(currentForm.location || '').trim().toLowerCase() &&
           String(sub.floor || '').trim().toLowerCase() === String(currentForm.floor || '').trim().toLowerCase() &&
-          String(sub.columnNo || '').trim().toLowerCase() === String(currentForm.columnNo || '').trim().toLowerCase() &&
           String(sub.flatNo || '').trim().toLowerCase() === String(currentForm.flatNo || '').trim().toLowerCase() &&
           String(sub.buildingName || '').trim().toLowerCase() === String(currentForm.buildingName || '').trim().toLowerCase() &&
-          String(sub.pour || '').trim().toLowerCase() === String(currentForm.pour || '').trim().toLowerCase() &&
-          String(sub.beamNo || '').trim().toLowerCase() === String(currentForm.beamNo || '').trim().toLowerCase()
+          String(sub.pour || '').trim().toLowerCase() === String(currentForm.pour || '').trim().toLowerCase()
         );
       });
 
