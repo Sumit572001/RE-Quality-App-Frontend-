@@ -12,7 +12,7 @@ const SuccessPage = () => {
       if (category) {
         navigate(`/select-subcategory?category=${encodeURIComponent(category)}`);
       } else {
-        navigate('/select-subcategory');
+        navigate('/');
       }
     }, 3000);
 

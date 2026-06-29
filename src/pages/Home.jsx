@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getChecklists } from '../api/checklists';
 import { getCategories } from '../api/categories';
@@ -91,6 +91,7 @@ const Home = () => {
   });
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -106,30 +107,35 @@ const Home = () => {
   }, [user]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('auditForm');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        let loadedDate = parsed.date;
-        if (loadedDate && loadedDate.length === 10) {
-          const now = new Date();
-          const hours = String(now.getHours()).padStart(2, '0');
-          const minutes = String(now.getMinutes()).padStart(2, '0');
-          loadedDate = `${loadedDate}T${hours}:${minutes}`;
+    const shouldKeep = location.state?.keepForm;
+    if (shouldKeep) {
+      const saved = localStorage.getItem('auditForm');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          let loadedDate = parsed.date;
+          if (loadedDate && loadedDate.length === 10) {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            loadedDate = `${loadedDate}T${hours}:${minutes}`;
+          }
+          setAuditForm(prev => ({
+            ...prev,
+            ...parsed,
+            date: loadedDate || getLocalDateTimeString()
+          }));
+          if (parsed.category) {
+            setSelectedCategory(parsed.category);
+          }
+        } catch (err) {
+          console.error('Failed to parse auditForm from localStorage:', err);
         }
-        setAuditForm(prev => ({
-          ...prev,
-          ...parsed,
-          date: loadedDate || getLocalDateTimeString()
-        }));
-        if (parsed.category) {
-          setSelectedCategory(parsed.category);
-        }
-      } catch (err) {
-        console.error('Failed to parse auditForm from localStorage:', err);
       }
+    } else {
+      localStorage.removeItem('auditForm');
     }
-  }, []);
+  }, [location]);
 
   const fetchCategories = async () => {
     try {

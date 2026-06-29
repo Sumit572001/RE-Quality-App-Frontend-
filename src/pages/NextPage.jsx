@@ -116,7 +116,7 @@ const NextPage = () => {
             srNo: item.srNo,
             documentType: item.documentType,
             description: item.description,
-            details: line.trim(),
+            details: line.trim().replace(/^[a-zA-Z]\)\s*/, ''),
             fileCode: item.fileCode || '',
             status: answers[key]?.status || '',
             remark: answers[key]?.remark || '',
@@ -144,10 +144,12 @@ const NextPage = () => {
         await savePendingAudit(auditPayload);
         console.log('💾 Document audit saved offline');
       }
+      localStorage.removeItem('auditForm');
       navigate('/success', { state: { offline: !isOnline } });
     } catch (err) {
       console.error('Document audit submission failed, saving offline:', err);
       await savePendingAudit(auditPayload);
+      localStorage.removeItem('auditForm');
       navigate('/success', { state: { offline: true } });
     } finally {
       setSubmitting(false);
@@ -237,100 +239,96 @@ const NextPage = () => {
                 </h3>
               </div>
 
-              <div className="space-y-3.5">
-                {(() => {
-                  const flatItems = [];
-                  group.list.forEach((item) => {
-                    if (!item.details || item.details.trim() === '') {
-                      flatItems.push({
-                        item,
-                        subKey: `${item.srNo}_0`,
-                        label: item.description,
-                        isSub: false,
-                        detailText: ''
-                      });
-                    } else {
-                      item.details.split('\n').forEach((line, index) => {
-                        flatItems.push({
-                          item,
-                          subKey: `${item.srNo}_${index}`,
-                          label: line.trim(),
-                          isSub: true,
-                          detailText: line.trim()
-                        });
-                      });
-                    }
-                  });
+              <div className="space-y-4">
+                {group.list.map((item) => {
+                  const hasSubPoints = item.details && item.details.trim() !== '';
+                  const subPoints = hasSubPoints ? item.details.split('\n') : [''];
 
-                  return flatItems.map((flat) => {
-                    const { item, subKey, label, isSub, detailText } = flat;
-                    const currentAns = answers[subKey] || { status: '', remark: '' };
-                    return (
-                      <div key={subKey} className="bg-white rounded-2xl border border-gray-150 p-4 shadow-sm space-y-3 text-left">
-                        {/* Description & Detail */}
-                        <div className="space-y-1">
-                          <h4 className="text-xs font-bold text-gray-800 leading-snug">
-                            {item.description}
-                          </h4>
-                          {isSub && (
-                            <p className="text-xs font-semibold text-gray-500">
-                              {detailText}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* YES / NO Choices & Remarks */}
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2.5">
-                            {/* YES */}
-                            <button
-                              type="button"
-                              onClick={() => handleStatusChange(subKey, 'YES', label)}
-                              className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-bold text-xs transition-all active:scale-[0.98]
-                                ${currentAns.status === 'YES'
-                                  ? 'border-green-500 bg-green-50 text-green-700 font-black'
-                                  : 'border-gray-200 text-gray-400 bg-white hover:border-gray-300'}`}
-                            >
-                              <svg className={`w-4 h-4 ${currentAns.status === 'YES' ? 'text-green-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
-                              </svg>
-                              YES
-                            </button>
-
-                            {/* NO */}
-                            <button
-                              type="button"
-                              onClick={() => handleStatusChange(subKey, 'NO', label)}
-                              className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-bold text-xs transition-all active:scale-[0.98]
-                                ${currentAns.status === 'NO'
-                                  ? 'border-red-500 bg-red-50 text-red-700 font-black'
-                                  : 'border-gray-200 text-gray-400 bg-white hover:border-gray-300'}`}
-                            >
-                              <svg className={`w-4 h-4 ${currentAns.status === 'NO' ? 'text-red-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                              NO
-                            </button>
-                          </div>
-
-                          {currentAns.status === 'NO' && (
-                            <div
-                              onClick={() => setActiveRemarkModal({ key: subKey, label: label, remark: currentAns.remark || '' })}
-                              className="bg-red-50/50 border border-red-100 rounded-xl px-3 py-2 text-xs text-red-600 font-medium cursor-pointer hover:bg-red-100/50 transition-colors flex items-center justify-between"
-                            >
-                              <span className="truncate pr-2">
-                                <strong>Reason for NO:</strong> {currentAns.remark || <span className="italic text-red-400">Click to add comment...</span>}
-                              </span>
-                              <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
+                  return (
+                    <div key={item.srNo} className="bg-white rounded-2xl border border-gray-150 p-5 shadow-sm space-y-4 text-left">
+                      {/* Card Heading / Description */}
+                      <div className="flex items-start justify-between pb-2.5 border-b border-gray-100">
+                        <h4 className="text-sm font-extrabold text-brand-blue leading-snug">
+                          {item.description}
+                        </h4>
+                        {item.fileCode && (
+                          <span className="text-[9px] font-bold text-gray-700 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded flex-shrink-0">
+                            {item.fileCode}
+                          </span>
+                        )}
                       </div>
-                    );
-                  });
-                })()}
+
+                      {/* Sub-points and YES/NO controls */}
+                      <div className="space-y-4">
+                        {subPoints.map((line, index) => {
+                          const detailText = line.trim().replace(/^[a-zA-Z]\)\s*/, '');
+                          const subKey = `${item.srNo}_${index}`;
+                          const currentAns = answers[subKey] || { status: '', remark: '' };
+                          const label = detailText || item.description;
+
+                          return (
+                            <div key={subKey} className={`${index > 0 ? 'pt-4 border-t border-gray-100' : ''} space-y-3`}>
+                              {detailText && (
+                                <p className="text-xs font-semibold text-gray-700">
+                                  {detailText}
+                                </p>
+                              )}
+
+                              {/* YES / NO Choices & Remarks */}
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-2 gap-2.5">
+                                  {/* YES */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStatusChange(subKey, 'YES', label)}
+                                    className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-bold text-xs transition-all active:scale-[0.98]
+                                      ${currentAns.status === 'YES'
+                                        ? 'border-green-500 bg-green-50 text-green-700 font-black'
+                                        : 'border-gray-200 text-gray-400 bg-white hover:border-gray-300'}`}
+                                  >
+                                    <svg className={`w-4 h-4 ${currentAns.status === 'YES' ? 'text-green-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    YES
+                                  </button>
+
+                                  {/* NO */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStatusChange(subKey, 'NO', label)}
+                                    className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 font-bold text-xs transition-all active:scale-[0.98]
+                                      ${currentAns.status === 'NO'
+                                        ? 'border-red-500 bg-red-50 text-red-700 font-black'
+                                        : 'border-gray-200 text-gray-400 bg-white hover:border-gray-300'}`}
+                                  >
+                                    <svg className={`w-4 h-4 ${currentAns.status === 'NO' ? 'text-red-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    NO
+                                  </button>
+                                </div>
+
+                                {currentAns.status === 'NO' && (
+                                  <div
+                                    onClick={() => setActiveRemarkModal({ key: subKey, label: label, remark: currentAns.remark || '' })}
+                                    className="bg-red-50/50 border border-red-100 rounded-xl px-3 py-2 text-xs text-red-600 font-medium cursor-pointer hover:bg-red-100/50 transition-colors flex items-center justify-between"
+                                  >
+                                    <span className="truncate pr-2">
+                                      <strong>Reason for NO:</strong> {currentAns.remark || <span className="italic text-red-400">Click to add comment...</span>}
+                                    </span>
+                                    <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}

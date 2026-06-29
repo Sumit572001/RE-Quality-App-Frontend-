@@ -201,7 +201,7 @@ const SelectSubCategory = () => {
         {/* Header with Back Button */}
         <div className="mb-6 flex items-center gap-3">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/', { state: { keepForm: true } })}
             className="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center shadow-sm text-brand-blue hover:bg-gray-50 transition-colors"
             title="Go Back to Details"
           >
