@@ -242,18 +242,14 @@ const NoIssueModal = ({ checklist, onClose, onSubmit, initialData }) => {
       alert('Please select a severity level.');
       return;
     }
-    setSubmitting(true);
-    setTimeout(() => {
-      onSubmit({
-        photos,
-        severity,
-        building: building.trim(),
-        unit: unit.trim(),
-        room: room.trim(),
-      });
-      setSubmitting(false);
-      onClose();
-    }, 600);
+    onSubmit({
+      photos,
+      severity,
+      building: building.trim(),
+      unit: unit.trim(),
+      room: room.trim(),
+    });
+    onClose();
   };
 
   const SEVERITY_OPTIONS = [

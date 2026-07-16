@@ -14,7 +14,15 @@ const Reports = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Extract base api url dynamically (removing the '/api' suffix)
-  const apiBaseUrl = (process.env.REACT_APP_API_URL || 'http://localhost:5000/api').replace('/api', '');
+  const apiBaseUrl = (() => {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      if (hostname === 'localhost' || hostname === '127.0.0.1' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+        return `http://${hostname}:5000`;
+      }
+    }
+    return (process.env.REACT_APP_API_URL || 'http://localhost:5000/api').replace('/api', '');
+  })();
 
   useEffect(() => {
     fetchReports();

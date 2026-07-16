@@ -185,12 +185,8 @@ const Home = () => {
       alert("Please select a Stage of Audit first.");
       return;
     }
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      localStorage.setItem('auditForm', JSON.stringify({ ...auditForm, category: selectedCategory }));
-      navigate(`/select-subcategory?category=${encodeURIComponent(selectedCategory)}`);
-    }, 800);
+    localStorage.setItem('auditForm', JSON.stringify({ ...auditForm, category: selectedCategory }));
+    navigate(`/select-subcategory?category=${encodeURIComponent(selectedCategory)}`);
   };
 
   return (
