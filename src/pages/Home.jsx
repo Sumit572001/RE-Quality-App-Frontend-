@@ -16,6 +16,15 @@ import useOnlineStatus from '../hooks/useOnlineStatus';
 const STAGE_OPTIONS = ['Pre Work', 'Pour Card', 'During Work', 'After Work', 'General'];
 
 const AUDITOR_NAMES = [
+  'Dhanajay Chavat',
+  'Jaydeep Patil',
+  'Sujit Shendkar',
+  'Ashvin Pawar',
+  'Sagar Patil',
+  'Sumit Verma'
+];
+
+const AUDITEE_NAMES = [
   'Yogesh Shinde',
   'Amol Shitole',
   'Ganesh Deshmukh',
@@ -29,15 +38,6 @@ const AUDITOR_NAMES = [
   'Sujit Chopde',
   'Subhash Bhandigare',
   'Hemant Pardeshi'
-];
-
-const AUDITEE_NAMES = [
-  'Dhanajay Chavat',
-  'Jaydeep Patil',
-  'Sujit Shendkar',
-  'Ashvin Pawar',
-  'Sagar Patil',
-  'Sumit Verma'
 ];
 
 const SITE_NAMES = [
@@ -61,6 +61,7 @@ const Home = () => {
   const [isAuditorDropdownOpen, setIsAuditorDropdownOpen] = useState(false);
   const [isAuditeeDropdownOpen, setIsAuditeeDropdownOpen] = useState(false);
   const [isSiteDropdownOpen, setIsSiteDropdownOpen] = useState(false);
+  const [isDateManuallyChanged, setIsDateManuallyChanged] = useState(false);
   const getLocalDateTimeString = () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -128,6 +129,7 @@ const Home = () => {
           if (parsed.category) {
             setSelectedCategory(parsed.category);
           }
+          setIsDateManuallyChanged(true);
         } catch (err) {
           console.error('Failed to parse auditForm from localStorage:', err);
         }
@@ -136,6 +138,43 @@ const Home = () => {
       localStorage.removeItem('auditForm');
     }
   }, [location]);
+
+  useEffect(() => {
+    if (isDateManuallyChanged) return;
+
+    const updateTimeToCurrent = () => {
+      if (document.activeElement && document.activeElement.id === 'audit-date-input') {
+        return;
+      }
+      setAuditForm(prev => {
+        if (isDateManuallyChanged) return prev;
+        return {
+          ...prev,
+          date: getLocalDateTimeString()
+        };
+      });
+    };
+
+    // Update on mount
+    updateTimeToCurrent();
+
+    const interval = setInterval(updateTimeToCurrent, 10000);
+
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible') {
+        updateTimeToCurrent();
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', handleVisibilityOrFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+    };
+  }, [isDateManuallyChanged]);
 
   const fetchCategories = async () => {
     try {
@@ -164,6 +203,9 @@ const Home = () => {
   }, []);
 
   const handleFormChange = (e) => {
+    if (e.target.name === 'date') {
+      setIsDateManuallyChanged(true);
+    }
     setAuditForm({ ...auditForm, [e.target.name]: e.target.value });
   };
 
@@ -217,7 +259,7 @@ const Home = () => {
           <div className="grid grid-cols-2 gap-3">
             {/* Site Name Box */}
             <div className="card p-3.5 relative site-dropdown-container flex flex-col justify-center">
-              <p className="text-xs font-bold text-brand-blue mb-1">Name Of Site</p>
+              <p className="text-xs font-bold text-brand-blue mb-1">Name Of Site <span className="text-red-500">*</span></p>
               <div
                 onClick={() => setIsSiteDropdownOpen(!isSiteDropdownOpen)}
                 className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent flex justify-between items-center cursor-pointer py-1"
@@ -264,6 +306,7 @@ const Home = () => {
               <input
                 type="datetime-local"
                 name="date"
+                id="audit-date-input"
                 value={auditForm.date}
                 onChange={handleFormChange}
                 className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent py-1"
@@ -273,7 +316,7 @@ const Home = () => {
 
           {/* Row 2: Auditor Name Box */}
           <div className="card p-3.5 auditor-dropdown-container relative flex flex-col justify-center">
-            <p className="text-xs font-bold text-brand-blue mb-1">Name of Auditor</p>
+            <p className="text-xs font-bold text-brand-blue mb-1">Name of Auditor <span className="text-red-500">*</span></p>
             <div
               onClick={() => setIsAuditorDropdownOpen(!isAuditorDropdownOpen)}
               className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent flex justify-between items-center cursor-pointer py-1"
@@ -316,7 +359,7 @@ const Home = () => {
 
           {/* Row 3: Auditee Name Box */}
           <div className="card p-3.5 auditee-dropdown-container relative flex flex-col justify-center">
-            <p className="text-xs font-bold text-brand-blue mb-1">Name of Auditee</p>
+            <p className="text-xs font-bold text-brand-blue mb-1">Name of Auditee <span className="text-red-500">*</span></p>
             <div
               onClick={() => setIsAuditeeDropdownOpen(!isAuditeeDropdownOpen)}
               className="w-full text-sm border-0 outline-none text-gray-700 bg-transparent flex justify-between items-center cursor-pointer py-1"
@@ -359,7 +402,7 @@ const Home = () => {
 
           {/* Row 4: Stage of Audit Box */}
           <div className="card p-3.5 flex flex-col justify-center">
-            <p className="text-xs font-bold text-brand-blue mb-2.5">Stage of Audit</p>
+            <p className="text-xs font-bold text-brand-blue mb-2.5">Stage of Audit <span className="text-red-500">*</span></p>
             <div className="grid grid-cols-2 gap-2">
               {sortCategories(categories).map((cat) => (
                 <label
