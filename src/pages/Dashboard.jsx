@@ -531,6 +531,8 @@ const Dashboard = () => {
   // noModalId stores which checklist is showing the NO-issue modal
   const [noModalId, setNoModalId] = useState(null);
   const [previousSubmissions, setPreviousSubmissions] = useState([]);
+  // Guard to prevent save effect from running before load effect
+  const draftLoadedRef = useRef(false);
 
   const fetchPreviousSubmissions = useCallback(async () => {
     if (!activeCategory || !activeSubCategory) return;
@@ -602,6 +604,52 @@ const Dashboard = () => {
     });
     return map;
   }, [previousSubmissions]);
+
+  const getDraftKey = useCallback((category, subCategory) => {
+    const currentForm = JSON.parse(localStorage.getItem('auditForm') || '{}');
+    const site = String(currentForm.siteName || '').trim().toLowerCase();
+    const loc = String(currentForm.location || '').trim().toLowerCase();
+    const flr = String(currentForm.floor || '').trim().toLowerCase();
+    const flat = String(currentForm.flatNo || '').trim().toLowerCase();
+    const bld = String(currentForm.buildingName || '').trim().toLowerCase();
+    const pr = String(currentForm.pour || '').trim().toLowerCase();
+    const cat = String(category || '').trim().toLowerCase();
+    const sub = String(subCategory || '').trim().toLowerCase();
+    
+    return `audit_draft_${site}_${bld}_${flr}_${flat}_${loc}_${pr}_${cat}_${sub}`;
+  }, []);
+
+  // Load draft from localStorage on activeCategory/activeSubCategory change
+  useEffect(() => {
+    if (activeCategory && activeSubCategory) {
+      draftLoadedRef.current = false;
+      const key = getDraftKey(activeCategory, activeSubCategory);
+      const savedDraft = localStorage.getItem(key);
+      if (savedDraft) {
+        try {
+          setCheckedChecklists(JSON.parse(savedDraft));
+          console.log(`📦 Loaded draft from local storage for ${activeSubCategory}`);
+        } catch (err) {
+          console.error('Failed to parse saved draft:', err);
+        }
+      } else {
+        setCheckedChecklists({});
+      }
+      draftLoadedRef.current = true;
+    }
+  }, [activeCategory, activeSubCategory, getDraftKey]);
+
+  // Save changes to checkedChecklists in localStorage
+  useEffect(() => {
+    if (!activeCategory || !activeSubCategory) return;
+    if (!draftLoadedRef.current) return; // don't save before draft is loaded
+    const key = getDraftKey(activeCategory, activeSubCategory);
+    if (Object.keys(checkedChecklists).length > 0) {
+      localStorage.setItem(key, JSON.stringify(checkedChecklists));
+    } else {
+      localStorage.removeItem(key);
+    }
+  }, [checkedChecklists, activeCategory, activeSubCategory, getDraftKey]);
 
   useEffect(() => {
     if (user?.role === 'admin') navigate('/admin');
@@ -806,11 +854,17 @@ const Dashboard = () => {
         await savePendingAudit(auditPayload);
         console.log('💾 Audit saved offline — will sync when online');
       }
+      // Clear draft checklist choices upon submission
+      const key = getDraftKey(activeCategory, activeSubCategory);
+      localStorage.removeItem(key);
       navigate('/success', { state: { offline: !isOnline, category: activeCategory } });
     } catch (err) {
       console.error('Submit failed, saving offline:', err);
       // Fallback: save offline even if online submit fails
       await savePendingAudit(auditPayload);
+      // Clear draft checklist choices upon submission
+      const key = getDraftKey(activeCategory, activeSubCategory);
+      localStorage.removeItem(key);
       navigate('/success', { state: { offline: true, category: activeCategory } });
     } finally {
       setSubmitting(false);

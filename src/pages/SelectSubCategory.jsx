@@ -191,7 +191,14 @@ const SelectSubCategory = () => {
     }
   };
 
-  const isAlreadyLocked = filteredSubCategories.length > 0 && filteredSubCategories.every(sub => sub.isLocked);
+  const isSubCategoryLocked = (sub) => {
+    if (sub.isLocked) return true;
+    return previousSubmissions.some(
+      (submission) => submission.subCategory === sub.name
+    );
+  };
+
+  const isAlreadyLocked = filteredSubCategories.length > 0 && filteredSubCategories.every(sub => isSubCategoryLocked(sub));
 
   return (
     <div className="page-container bg-brand-gray pb-10">
@@ -241,76 +248,79 @@ const SelectSubCategory = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-2.5">
-                  {filteredSubCategories.map((sub) => (
-                    <div
-                      key={sub._id}
-                      onClick={() => {
-                        if (sub.isLocked) {
-                          showToast('This sub-category checklist is locked.', 'error');
-                          return;
-                        }
-                        navigate(`/dashboard?category=${encodeURIComponent(selectedCategory.name)}&subCategory=${encodeURIComponent(sub.name)}`);
-                      }}
-                      className={`flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 transition-all duration-200 group ${sub.isLocked
-                        ? 'opacity-60 cursor-not-allowed bg-gray-50'
-                        : 'hover:border-brand-orange hover:shadow-sm cursor-pointer'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between flex-1 pr-2 min-w-0">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-200 flex-shrink-0 ${sub.isLocked
-                            ? 'bg-gray-200 text-gray-400'
-                            : 'bg-brand-orange/10 text-brand-orange group-hover:bg-brand-orange group-hover:text-white'
-                            }`}>
-                            {sub.isLocked ? (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                              </svg>
-                            ) : (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                              </svg>
-                            )}
-                          </div>
-                          <span className={`text-xs font-bold leading-tight transition-colors truncate ${sub.isLocked
-                            ? 'text-gray-400'
-                            : 'text-gray-700 group-hover:text-brand-orange'
-                            }`}>
-                            {sub.name}
-                          </span>
-                        </div>
-                        {(() => {
-                          const progress = getSubCategoryProgress(sub.name);
-                          return (
-                            <span className={`text-[10px] font-black px-2.5 py-1 rounded-full whitespace-nowrap border flex-shrink-0 ${sub.isLocked
-                              ? 'text-gray-400 bg-gray-100 border-gray-200'
-                              : 'text-brand-orange bg-brand-orange/10 border-brand-orange/20'
+                  {filteredSubCategories.map((sub) => {
+                    const isLocked = isSubCategoryLocked(sub);
+                    return (
+                      <div
+                        key={sub._id}
+                        onClick={() => {
+                          if (isLocked) {
+                            showToast('This sub-category checklist is locked.', 'error');
+                            return;
+                          }
+                          navigate(`/dashboard?category=${encodeURIComponent(selectedCategory.name)}&subCategory=${encodeURIComponent(sub.name)}`);
+                        }}
+                        className={`flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 transition-all duration-200 group ${isLocked
+                          ? 'opacity-60 cursor-not-allowed bg-gray-50'
+                          : 'hover:border-brand-orange hover:shadow-sm cursor-pointer'
+                          }`}
+                      >
+                        <div className="flex items-center justify-between flex-1 pr-2 min-w-0">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-200 flex-shrink-0 ${isLocked
+                              ? 'bg-gray-200 text-gray-400'
+                              : 'bg-brand-orange/10 text-brand-orange group-hover:bg-brand-orange group-hover:text-white'
                               }`}>
-                              {progress.achievedMarks > 0
-                                ? `${progress.achievedMarks}/${progress.totalMarks} Marks (${progress.scorePercentage}%)`
-                                : `${progress.totalMarks} Marks`
-                              }
+                              {isLocked ? (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                              ) : (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                </svg>
+                              )}
+                            </div>
+                            <span className={`text-xs font-bold leading-tight transition-colors truncate ${isLocked
+                              ? 'text-gray-400'
+                              : 'text-gray-700 group-hover:text-brand-orange'
+                              }`}>
+                              {sub.name}
                             </span>
-                          );
-                        })()}
+                          </div>
+                          {(() => {
+                            const progress = getSubCategoryProgress(sub.name);
+                            return (
+                              <span className={`text-[10px] font-black px-2.5 py-1 rounded-full whitespace-nowrap border flex-shrink-0 ${isLocked
+                                ? 'text-green-700 bg-green-100 border-green-300'
+                                : 'text-brand-orange bg-brand-orange/10 border-brand-orange/20'
+                                }`}>
+                                {progress.achievedMarks > 0
+                                  ? `${progress.achievedMarks}/${progress.totalMarks} Marks (${progress.scorePercentage}%)`
+                                  : `${progress.totalMarks} Marks`
+                                }
+                              </span>
+                            );
+                          })()}
+                        </div>
+                        {isLocked ? (
+                          <svg
+                            className="w-4 h-4 text-gray-400 flex-shrink-0"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="w-4 h-4 text-gray-300 group-hover:text-brand-orange transition-colors flex-shrink-0"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                          </svg>
+                        )}
                       </div>
-                      {sub.isLocked ? (
-                        <svg
-                          className="w-4 h-4 text-red-400 flex-shrink-0"
-                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-4 h-4 text-gray-300 group-hover:text-brand-orange transition-colors flex-shrink-0"
-                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                        </svg>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
